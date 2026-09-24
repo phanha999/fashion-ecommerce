@@ -11,7 +11,7 @@ function CategorySection() {
     },
     {
       id: 2,
-      name: 'Women',
+      name: 'Women',    
       image:
         'https://images.unsplash.com/photo-1496747611176-843222e1e57c',
       link: '/shop?category=women',
