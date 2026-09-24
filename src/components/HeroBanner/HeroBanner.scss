@@ -1,0 +1,11 @@
+.carouselWrapper {
+  .swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    opacity: .5;
+  }
+  .swiper-pagination-bullet-active {
+    opacity: 1;   
+  }     
+}  
