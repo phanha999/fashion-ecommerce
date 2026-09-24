@@ -1,0 +1,96 @@
+// Mobile layout stays in source order, with each banner retaining a portrait ratio.
+.grid-banner-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.grid-banner-featured,
+.grid-banner-small {
+  min-height: 0;
+  aspect-ratio: 4 / 5;
+}
+
+@media (min-width: 640px) {
+  .grid-banner-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: 30px;
+  }
+
+  .grid-banner-featured {
+    grid-row: span 2;
+    aspect-ratio: auto;
+  }
+
+  .grid-banner-small {
+    aspect-ratio: auto;
+  }
+
+  .grid-banner-featured:nth-of-type(1) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .grid-banner-small:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .grid-banner-small:nth-of-type(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .grid-banner-small:nth-of-type(4) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .grid-banner-small:nth-of-type(5) {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .grid-banner-featured:nth-of-type(6) {
+    grid-column: 2;
+    grid-row: 3 / span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-banner-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr) minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid-banner-featured:nth-of-type(1) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .grid-banner-small:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .grid-banner-small:nth-of-type(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .grid-banner-small:nth-of-type(4) {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .grid-banner-small:nth-of-type(5) {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .grid-banner-featured:nth-of-type(6) {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}

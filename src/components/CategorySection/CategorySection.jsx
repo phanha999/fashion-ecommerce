@@ -11,7 +11,7 @@ function CategorySection() {
     },
     {
       id: 2,
-      name: 'Women',    
+      name: 'Women',
       image:
         'https://images.unsplash.com/photo-1496747611176-843222e1e57c',
       link: '/shop?category=women',
@@ -34,7 +34,7 @@ function CategorySection() {
 
   return (
     <section className="py-20">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16">
         <div className="mb-10 text-center">
           <p className="mb-3 text-sm uppercase tracking-[0.3em] text-gray-500">
             Explore
@@ -45,7 +45,7 @@ function CategorySection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:gap-[30px] md:grid-cols-4">
           {categories.map((category) => (
             <Link
               key={category.id}
