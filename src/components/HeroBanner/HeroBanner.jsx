@@ -45,7 +45,7 @@ function HeroBanner() {
         }}
         loop
         speed={700}
-        className="carouselWrapper h-[600px]"
+        className="carouselWrapper h-[520px] sm:h-[640px] lg:h-[800px]"
       >
         {banners.map((banner) => (
           <SwiperSlide key={banner.id}>
@@ -65,7 +65,7 @@ function HeroBanner() {
                       {banner.subtitle}
                     </p>
 
-                    <h1 className="mb-6 text-5xl font-bold leading-tight md:text-7xl">
+                    <h1 className="mb-6 text-4xl font-bold leading-tight sm:text-5xl md:text-7xl">
                       {banner.title}
                     </h1>
 

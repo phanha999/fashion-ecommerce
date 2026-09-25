@@ -26,6 +26,12 @@ function ProductCard({ product }) {
             {product.name}
           </h3>
 
+          {product.description && (
+            <p className="mt-2 line-clamp-2 text-xs leading-5 text-gray-500">
+              {product.description}
+            </p>
+          )}
+
           <p className="mt-2 text-sm text-gray-600">
             ${product.price}  
           </p>
