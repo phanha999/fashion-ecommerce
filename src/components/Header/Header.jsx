@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 function Header() {
   return (
     <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex min-h-20 w-full max-w-[1800px] flex-wrap items-center justify-between gap-4 sm:gap-[30px] px-4 py-3 md:h-20 md:flex-nowrap md:px-8 md:py-0 2xl:px-16">
+      <div className="mx-auto flex min-h-20 w-full max-w-[1920px] flex-wrap items-center justify-between gap-4 sm:gap-[30px] px-4 py-3 md:h-20 md:flex-nowrap md:px-8 md:py-0 2xl:px-16">
 
         <Link
           to="/"
