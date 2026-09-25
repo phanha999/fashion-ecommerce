@@ -21,7 +21,7 @@ function BestSellers() {
           className="text-sm font-medium text-gray-900 underline underline-offset-4"
         >
           View all
-        </Link> 
+        </Link> <Test></Test>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:gap-[30px] lg:grid-cols-4">
