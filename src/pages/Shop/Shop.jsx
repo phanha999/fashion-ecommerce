@@ -36,6 +36,7 @@ function Shop() {
   const [error, setError] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [priceDraft, setPriceDraft] = useState(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const loadMoreRequestId = useRef(0);
 
   const selectedFilters = useMemo(() => readFilterParams(searchParams), [searchParams]);
@@ -49,7 +50,20 @@ function Shop() {
   const reverse = sort === 'price-high';
 
   useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') setRefreshVersion((version) => version + 1);
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
+    loadMoreRequestId.current += 1;
     const timeoutId = window.setTimeout(async () => {
       loadMoreRequestId.current += 1;
       setLoadingMore(false);
@@ -77,9 +91,10 @@ function Shop() {
 
     return () => {
       cancelled = true;
+      loadMoreRequestId.current += 1;
       window.clearTimeout(timeoutId);
     };
-  }, [apiSort, requestFilters, reverse, search]);
+  }, [apiSort, requestFilters, reverse, search, refreshVersion]);
 
   useEffect(() => {
     if (!legacyCategory || selectedFilters.length > 0 || searchResults.filters.length === 0) return;

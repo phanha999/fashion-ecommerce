@@ -29,6 +29,7 @@ const SHOP_SEARCH_QUERY = `
       nodes {
         ... on Product {
           id
+          availableForSale
           title
           description
           productType
@@ -59,6 +60,7 @@ function mapProduct(product) {
 
   return {
     id: product.id,
+    availableForSale: product.availableForSale,
     name: product.title,
     description: product.description,
     category: normalizeCategory(product.productType, tags),
@@ -85,90 +87,138 @@ function mapFilter(filter) {
   };
 }
 
-const ALPHABETICAL_PAGE_SIZE = 250;
-const alphabeticalCache = new Map();
+const CATALOG_QUERY = `
+  query ShopCatalog($first: Int!, $after: String) {
+    products(first: $first, after: $after, sortKey: ID) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        id title description productType vendor tags availableForSale
+        featuredImage { url altText width height }
+        priceRange { minVariantPrice { amount currencyCode } }
+      }
+    }
+  }
+`;
 
-async function loadAlphabeticalResults(query, filters) {
+const RESULT_PAGE_SIZE = 250;
+const resultsCache = new Map();
+
+async function loadResults(query, filters, sortKey, reverse) {
+  const availabilitySelections = new Set(filters
+    .filter((filter) => typeof filter.available === 'boolean')
+    .map((filter) => filter.available));
+  const brandSelections = new Set(filters
+    .filter((filter) => typeof filter.productVendor === 'string')
+    .map((filter) => filter.productVendor));
+  const otherFilters = filters.flatMap((filter) => {
+    const remaining = { ...filter };
+    delete remaining.available;
+    delete remaining.productVendor;
+    return Object.keys(remaining).length ? [remaining] : [];
+  });
+  const useCatalog = !query.trim() && otherFilters.length === 0;
   let after = null;
-  let totalCount;
-  let availableFilters;
+  let availableFilters = [];
   const productsById = new Map();
+  const seenCursors = new Set();
+
+  // Search owns Shopify's configured facets, but an unfiltered catalog must
+  // come from products: the search index can omit catalog products.
+  const searchPage = (cursor, first = RESULT_PAGE_SIZE) => shopifyFetch(SHOP_SEARCH_QUERY, {
+    query, first, after: cursor, filters: otherFilters,
+    sortKey: sortKey === 'PRICE' ? 'PRICE' : 'RELEVANCE', reverse,
+  });
+  if (useCatalog) {
+    const data = await searchPage(null, 1);
+    availableFilters = data.search.productFilters.map(mapFilter);
+  }
 
   do {
-    const data = await shopifyFetch(SHOP_SEARCH_QUERY, {
-      query,
-      first: ALPHABETICAL_PAGE_SIZE,
-      after,
-      filters,
-      sortKey: 'RELEVANCE',
-      reverse: false,
-    });
-    const result = data.search;
-    totalCount = result.totalCount;
-    availableFilters = result.productFilters.map(mapFilter);
+    const data = useCatalog
+      ? await shopifyFetch(CATALOG_QUERY, { first: RESULT_PAGE_SIZE, after })
+      : await searchPage(after);
+    const result = useCatalog ? data.products : data.search;
+    if (!useCatalog && after === null) availableFilters = result.productFilters.map(mapFilter);
     result.nodes.map(mapProduct).forEach((product) => productsById.set(product.id, product));
-    after = result.pageInfo.hasNextPage ? result.pageInfo.endCursor : null;
+    if (result.pageInfo.hasNextPage) {
+      const cursor = result.pageInfo.endCursor;
+      if (!cursor || seenCursors.has(cursor)) throw new Error('Shopify returned an invalid product page. Please try again.');
+      seenCursors.add(cursor);
+      after = cursor;
+    } else {
+      after = null;
+    }
   } while (after);
 
-  const products = [...productsById.values()].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }),
-  );
-
-  return { products, filters: availableFilters, totalCount };
+  const matchingProducts = [...productsById.values()];
+  const matchesBrand = (product) => brandSelections.size === 0 || brandSelections.has(product.brand);
+  const matchesAvailability = (product) => availabilitySelections.size !== 1
+    || availabilitySelections.has(product.availableForSale);
+  const brandCounts = new Map();
+  matchingProducts.filter(matchesAvailability).forEach((product) => {
+    if (product.brand) brandCounts.set(product.brand, (brandCounts.get(product.brand) || 0) + 1);
+  });
+  // Keep Shopify's configured Brand heading, but build values from actual
+  // vendors. This removes stale vendors and includes newly added vendors.
+  availableFilters = availableFilters.map((filter) => filter.id === 'filter.p.vendor'
+    ? { ...filter, values: [...brandCounts].sort(([a], [b]) => a.localeCompare(b)).map(([brand, count]) => ({
+      id: filter.values.find((value) => value.input.productVendor === brand)?.id || `${filter.id}:${brand}`,
+      label: brand,
+      count,
+      input: { productVendor: brand },
+    })) }
+    : filter);
+  // Count products before applying this facet, so both options remain useful.
+  // A product with any purchasable variant belongs only to In stock.
+  availableFilters = availableFilters.map((filter) => filter.id === 'filter.v.availability'
+    ? { ...filter, values: filter.values.map((value) => ({
+      ...value,
+      count: matchingProducts.filter((product) => matchesBrand(product)
+        && product.availableForSale === value.input.available).length,
+    })) }
+    : filter);
+  const products = matchingProducts.filter((product) => matchesBrand(product) && matchesAvailability(product));
+  if (sortKey === 'TITLE') {
+    products.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
+    if (reverse) products.reverse();
+  } else if (sortKey === 'PRICE' && useCatalog) {
+    products.sort((a, b) => reverse ? b.price - a.price : a.price - b.price);
+  }
+  // Count actual unique products, not search.totalCount, which can disagree
+  // with the complete returned result set.
+  return { products, filters: availableFilters, totalCount: products.length };
 }
 
 export async function searchProducts({
-  query = '',
-  filters = [],
-  first = 24,
-  after = null,
-  sortKey = 'RELEVANCE',
-  reverse = false,
+  query = '', filters = [], first = 24, after = null,
+  sortKey = 'RELEVANCE', reverse = false,
 } = {}) {
-  if (sortKey === 'TITLE') {
-    const cacheKey = JSON.stringify([query, filters]);
-    let resultPromise = alphabeticalCache.get(cacheKey);
-
-    if (!resultPromise) {
-      resultPromise = loadAlphabeticalResults(query, filters);
-      alphabeticalCache.clear();
-      alphabeticalCache.set(cacheKey, resultPromise);
-    }
-
-    const result = await resultPromise;
-    const offset = after ? Number(after.split(':').at(-1)) || 0 : 0;
-    const nextOffset = offset + first;
-
-    return {
-      products: result.products.slice(offset, nextOffset),
-      filters: result.filters,
-      totalCount: result.totalCount,
-      pageInfo: {
-        hasNextPage: nextOffset < result.products.length,
-        endCursor: nextOffset < result.products.length ? `title-ascending:${nextOffset}` : null,
-      },
-    };
+  const cacheKey = JSON.stringify([query, filters, sortKey, reverse]);
+  let resultPromise = resultsCache.get(cacheKey);
+  // Refresh first-page requests; load-more uses the same product snapshot.
+  if (!after || !resultPromise) {
+    resultPromise = loadResults(query, filters, sortKey, reverse);
+    resultsCache.clear();
+    resultsCache.set(cacheKey, resultPromise);
+    resultPromise.catch(() => {
+      if (resultsCache.get(cacheKey) === resultPromise) resultsCache.delete(cacheKey);
+    });
   }
-
-  const data = await shopifyFetch(SHOP_SEARCH_QUERY, {
-    query,
-    first,
-    after,
-    filters,
-    sortKey,
-    reverse,
-  });
-  const result = data.search;
-
+  const result = await resultPromise;
+  const offset = after ? Number(after.split(':').at(-1)) || 0 : 0;
+  const nextOffset = offset + first;
   return {
-    products: result.nodes.map(mapProduct),
-    filters: result.productFilters.map(mapFilter),
+    products: result.products.slice(offset, nextOffset),
+    filters: result.filters,
     totalCount: result.totalCount,
-    pageInfo: result.pageInfo,
+    pageInfo: {
+      hasNextPage: nextOffset < result.products.length,
+      endCursor: nextOffset < result.products.length ? `products:${nextOffset}` : null,
+    },
   };
 }
-const NEW_ARRIVALS_QUERY = `
-  query NewArrivals($first: Int!, $sortKey: ProductSortKeys!, $reverse: Boolean!) {
+const HOME_PRODUCTS_QUERY = `
+  query HomeProducts($first: Int!, $sortKey: ProductSortKeys!, $reverse: Boolean!) {
     products(first: $first, sortKey: $sortKey, reverse: $reverse) {
       nodes {
         id
@@ -185,7 +235,7 @@ const NEW_ARRIVALS_QUERY = `
 `;
 
 export async function getNewArrivalProducts({ first = 8 } = {}) {
-  const data = await shopifyFetch(NEW_ARRIVALS_QUERY, {
+  const data = await shopifyFetch(HOME_PRODUCTS_QUERY, {
     first,
     sortKey: 'CREATED_AT',
     reverse: true,
@@ -195,4 +245,14 @@ export async function getNewArrivalProducts({ first = 8 } = {}) {
     ...mapProduct(product),
     isNew: true,
   }));
+}
+
+export async function getBestSellerProducts({ first = 5 } = {}) {
+  const data = await shopifyFetch(HOME_PRODUCTS_QUERY, {
+    first,
+    sortKey: 'BEST_SELLING',
+    reverse: false,
+  });
+
+  return data.products.nodes.map(mapProduct);
 }
