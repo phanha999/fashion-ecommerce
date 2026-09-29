@@ -1,5 +1,4 @@
 import { shopifyFetch } from './client';
-
 const SHOP_SEARCH_QUERY = `
   query ShopSearch(
     $query: String!
@@ -32,7 +31,6 @@ const SHOP_SEARCH_QUERY = `
           availableForSale
           title
           description
-          productType
           vendor
           tags
           featuredImage { url altText width height }
@@ -43,17 +41,6 @@ const SHOP_SEARCH_QUERY = `
   }
 `;
 
-function normalizeCategory(productType, tags) {
-  const taggedCategory = tags.find((tag) => tag.startsWith('category:'))?.slice(9);
-  if (taggedCategory) return taggedCategory;
-
-  const type = productType.trim().toLowerCase();
-  if (['accessory', 'accessories', 'bag', 'bags'].includes(type)) return 'accessories';
-  if (['shoe', 'shoes', 'boot', 'boots', 'sneaker', 'sneakers'].includes(type)) return 'shoes';
-  if (['clothing', 'clothes', 'dress', 'dresses', 'sweater', 'sweaters'].includes(type)) return 'clothing';
-  return type;
-}
-
 function mapProduct(product) {
   const tags = product.tags.map((tag) => tag.toLowerCase());
   const price = product.priceRange.minVariantPrice;
@@ -63,7 +50,6 @@ function mapProduct(product) {
     availableForSale: product.availableForSale,
     name: product.title,
     description: product.description,
-    category: normalizeCategory(product.productType, tags),
     brand: product.vendor,
     color: tags.find((tag) => tag.startsWith('color:'))?.slice(6) || '',
     theme: tags.find((tag) => tag.startsWith('theme:'))?.slice(6) || '',
@@ -92,7 +78,7 @@ const CATALOG_QUERY = `
     products(first: $first, after: $after, sortKey: ID) {
       pageInfo { hasNextPage endCursor }
       nodes {
-        id title description productType vendor tags availableForSale
+        id title description vendor tags availableForSale
         featuredImage { url altText width height }
         priceRange { minVariantPrice { amount currencyCode } }
       }
@@ -100,10 +86,26 @@ const CATALOG_QUERY = `
   }
 `;
 
+const COLLECTION_PRODUCTS_QUERY = `
+  query CollectionProducts($handle: String!, $first: Int!, $after: String, $filters: [ProductFilter!]) {
+    collection(handle: $handle) {
+      handle
+      products(first: $first, after: $after, filters: $filters) {
+        pageInfo { hasNextPage endCursor }
+        filters { id label type values { id label count input } }
+        nodes {
+          id availableForSale title description vendor tags
+          featuredImage { url altText width height }
+          priceRange { minVariantPrice { amount currencyCode } }
+        }
+      }
+    }
+  }
+`;
 const RESULT_PAGE_SIZE = 250;
 const resultsCache = new Map();
 
-async function loadResults(query, filters, sortKey, reverse) {
+async function loadResults(query, filters, sortKey, reverse, collection = '') {
   const availabilitySelections = new Set(filters
     .filter((filter) => typeof filter.available === 'boolean')
     .map((filter) => filter.available));
@@ -116,7 +118,8 @@ async function loadResults(query, filters, sortKey, reverse) {
     delete remaining.productVendor;
     return Object.keys(remaining).length ? [remaining] : [];
   });
-  const useCatalog = !query.trim() && otherFilters.length === 0;
+  const useCollection = Boolean(collection);
+  const useCatalog = !useCollection && !query.trim() && otherFilters.length === 0;
   let after = null;
   let availableFilters = [];
   const productsById = new Map();
@@ -128,17 +131,26 @@ async function loadResults(query, filters, sortKey, reverse) {
     query, first, after: cursor, filters: otherFilters,
     sortKey: sortKey === 'PRICE' ? 'PRICE' : 'RELEVANCE', reverse,
   });
-  if (useCatalog) {
+  if (useCollection) {
+    const data = await shopifyFetch(COLLECTION_PRODUCTS_QUERY, {
+      handle: collection, first: 1, after: null, filters: otherFilters,
+    });
+    if (!data.collection) throw new Error(`Shopify collection "${collection}" was not found or is not available to the Storefront API.`);
+    availableFilters = data.collection.products.filters.map(mapFilter);
+  } else if (useCatalog) {
     const data = await searchPage(null, 1);
     availableFilters = data.search.productFilters.map(mapFilter);
   }
 
   do {
-    const data = useCatalog
-      ? await shopifyFetch(CATALOG_QUERY, { first: RESULT_PAGE_SIZE, after })
-      : await searchPage(after);
-    const result = useCatalog ? data.products : data.search;
-    if (!useCatalog && after === null) availableFilters = result.productFilters.map(mapFilter);
+    const data = useCollection
+      ? await shopifyFetch(COLLECTION_PRODUCTS_QUERY, { handle: collection, first: RESULT_PAGE_SIZE, after, filters: otherFilters })
+      : useCatalog
+        ? await shopifyFetch(CATALOG_QUERY, { first: RESULT_PAGE_SIZE, after })
+        : await searchPage(after);
+    if (useCollection && !data.collection) throw new Error(`Shopify collection "${collection}" was not found or is not available to the Storefront API.`);
+    const result = useCollection ? data.collection.products : useCatalog ? data.products : data.search;
+    if (!useCollection && !useCatalog && after === null) availableFilters = result.productFilters.map(mapFilter);
     result.nodes.map(mapProduct).forEach((product) => productsById.set(product.id, product));
     if (result.pageInfo.hasNextPage) {
       const cursor = result.pageInfo.endCursor;
@@ -150,7 +162,11 @@ async function loadResults(query, filters, sortKey, reverse) {
     }
   } while (after);
 
-  const matchingProducts = [...productsById.values()];
+  const matchingProducts = [...productsById.values()].filter((product) => {
+    if (!useCollection || !query.trim()) return true;
+    const term = query.trim().toLocaleLowerCase();
+    return [product.name, product.description, product.brand].some((value) => value.toLocaleLowerCase().includes(term));
+  });
   const matchesBrand = (product) => brandSelections.size === 0 || brandSelections.has(product.brand);
   const matchesAvailability = (product) => availabilitySelections.size !== 1
     || availabilitySelections.has(product.availableForSale);
@@ -181,7 +197,7 @@ async function loadResults(query, filters, sortKey, reverse) {
   if (sortKey === 'TITLE') {
     products.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }));
     if (reverse) products.reverse();
-  } else if (sortKey === 'PRICE' && useCatalog) {
+  } else if (sortKey === 'PRICE' && (useCatalog || useCollection)) {
     products.sort((a, b) => reverse ? b.price - a.price : a.price - b.price);
   }
   // Count actual unique products, not search.totalCount, which can disagree
@@ -191,13 +207,13 @@ async function loadResults(query, filters, sortKey, reverse) {
 
 export async function searchProducts({
   query = '', filters = [], first = 24, after = null,
-  sortKey = 'RELEVANCE', reverse = false,
+  sortKey = 'RELEVANCE', reverse = false, collection = '',
 } = {}) {
-  const cacheKey = JSON.stringify([query, filters, sortKey, reverse]);
+  const cacheKey = JSON.stringify([collection, query, filters, sortKey, reverse]);
   let resultPromise = resultsCache.get(cacheKey);
   // Refresh first-page requests; load-more uses the same product snapshot.
   if (!after || !resultPromise) {
-    resultPromise = loadResults(query, filters, sortKey, reverse);
+    resultPromise = loadResults(query, filters, sortKey, reverse, collection);
     resultsCache.clear();
     resultsCache.set(cacheKey, resultPromise);
     resultPromise.catch(() => {
@@ -224,7 +240,6 @@ const HOME_PRODUCTS_QUERY = `
         id
         title
         description
-        productType
         vendor
         tags
         featuredImage { url altText width height }
@@ -234,7 +249,7 @@ const HOME_PRODUCTS_QUERY = `
   }
 `;
 
-export async function getNewArrivalProducts({ first = 8 } = {}) {
+export async function getNewArrivalProducts({ first = 24 } = {}) {
   const data = await shopifyFetch(HOME_PRODUCTS_QUERY, {
     first,
     sortKey: 'CREATED_AT',
@@ -247,12 +262,37 @@ export async function getNewArrivalProducts({ first = 8 } = {}) {
   }));
 }
 
-export async function getBestSellerProducts({ first = 5 } = {}) {
-  const data = await shopifyFetch(HOME_PRODUCTS_QUERY, {
+const BEST_SELLERS_COLLECTION_QUERY = `
+  query BestSellersCollection($handle: String!, $first: Int!) {
+    collection(handle: $handle) {
+      products(first: $first, sortKey: BEST_SELLING) {
+        nodes {
+          id
+          title
+          description
+          vendor
+          tags
+          featuredImage { url altText width height }
+          priceRange { minVariantPrice { amount currencyCode } }
+        }
+      }
+    }
+  }
+`;
+
+export async function getBestSellerProducts({ collectionHandle, first = 5 } = {}) {
+  if (!collectionHandle) throw new Error('A Shopify collection handle is required to load best sellers.');
+
+  const data = await shopifyFetch(BEST_SELLERS_COLLECTION_QUERY, {
+    handle: collectionHandle,
     first,
-    sortKey: 'BEST_SELLING',
-    reverse: false,
   });
 
-  return data.products.nodes.map(mapProduct);
+  if (!data.collection) {
+    throw new Error(`Shopify collection "${collectionHandle}" was not found or is not available to the Storefront API.`);
+  }
+
+  return data.collection.products.nodes.map(mapProduct);
 }
+
+

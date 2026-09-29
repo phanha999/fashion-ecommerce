@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { getHeroBanners } from '../../services/shopify/contentService';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 
@@ -6,44 +8,55 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 
 function HeroBanner() {
-  const banners = [
-    {
-        id: 1,
-        image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c',
-        subtitle: 'New Collection 2026',
-        title: 'Define Your Style',
-        description: 'Discover modern fashion designed for your everyday style.',
-        button: 'Shop Now',
-        button_url: '/shop/men',
-    },
-    {
-        id: 2,
-        image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b',
-        subtitle: 'Autumn Collection',
-        title: 'Modern Essentials',
-        description: 'Timeless pieces made for your everyday wardrobe.',
-        button: 'Shop Now',
-        button_url: '/shop/women',
-    },
-    {
-        id: 3,
-        image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d',
-        subtitle: 'New Arrivals',  
-        title: 'Made For You',
-        description: 'Explore the latest styles from Velora.',
-        button: 'Shop Now',
-        button_url: '/shop/kids',
-    },
-  ];
+  const [banners, setBanners] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getHeroBanners()
+      .then((shopifyBanners) => {
+        if (!cancelled) setBanners(shopifyBanners);
+      })
+      .catch((error) => {
+        console.error('Could not load Shopify hero banners:', error);
+        if (!cancelled) setLoadError(error.message || 'Unknown Shopify error.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section
+        aria-label="Loading hero banners"
+        className="carouselWrapper min-h-[520px] bg-gray-100 sm:min-h-[640px] lg:min-h-[800px]"
+      />
+    );
+  }
+
+  if (banners.length === 0) {
+    return (
+      <section className="mx-auto my-6 max-w-7xl px-6" role="alert">
+        <p className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          Hero Shopify chưa hiển thị. {loadError || 'Shopify không trả về banner nào.'}
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section>
       <Swiper
         modules={[Pagination]}
-        pagination={{
-          clickable: true,
-        }}
-        loop
+        pagination={{ clickable: true }}
+        loop={banners.length > 1}
         speed={700}
         className="carouselWrapper h-[520px] sm:h-[640px] lg:h-[800px]"
       >
@@ -52,7 +65,7 @@ function HeroBanner() {
             <div className="relative h-full overflow-hidden">
               <img
                 src={banner.image}
-                alt={banner.title}
+                alt={banner.imageAlt || banner.title}
                 className="h-full w-full object-cover"
               />
 
@@ -73,23 +86,22 @@ function HeroBanner() {
                       {banner.description}
                     </p>
 
-                    <button
-                      type="button"
-                      className=""
+                    <a
+                      href={banner.button_url}
+                      className="inline-block bg-white px-8 py-4 text-sm font-medium uppercase tracking-wider text-black transition duration-500 hover:bg-black hover:text-white"
                     >
-                        <a href={banner.button_url} className="bg-white px-8 py-4 text-sm font-medium uppercase tracking-wider text-black transition hover:bg-black hover:text-white duration-500">
-                            {banner.button}
-                        </a> 
-                    </button>
-                  </div> 
+                      {banner.button}
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
-          </SwiperSlide> 
-        ))} 
+          </SwiperSlide>
+        ))}
       </Swiper>
     </section>
   );
 }
 
 export default HeroBanner;
+

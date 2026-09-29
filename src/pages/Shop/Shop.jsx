@@ -4,14 +4,6 @@ import ProductCard from '../../components/ProductCard/ProductCard';
 import { searchProducts } from '../../services/shopify/productService';
 
 const PAGE_SIZE = 24;
-const LEGACY_CATEGORY_LABELS = {
-  men: 'Clothing',
-  women: 'Clothing',
-  essentials: 'Clothing',
-  shoes: 'Boots',
-  accessories: 'Accessories',
-};
-
 function readFilterParams(searchParams) {
   return searchParams.getAll('filter').flatMap((serialized) => {
     try {
@@ -43,7 +35,8 @@ function Shop() {
   const priceFilter = searchResults.filters.find((filter) => filter.type === 'PRICE_RANGE');
   const priceBounds = priceFilter?.values[0]?.input?.price || { min: 0, max: 0 };
   const priceDraftValues = priceDraft || { min: String(priceBounds.min), max: String(priceBounds.max) };
-  const legacyCategory = searchParams.get('category');
+  const collectionParam = searchParams.get('collection') || '';
+  const collection = collectionParam;
   const activeFilters = selectedFilters;
   const requestFilters = useMemo(() => activeFilters.map((filter) => filter.input), [activeFilters]);
   const apiSort = sort === 'title-ascending' ? 'TITLE' : sort === 'price-low' || sort === 'price-high' ? 'PRICE' : 'RELEVANCE';
@@ -73,6 +66,7 @@ function Shop() {
         const result = await searchProducts({
           query: search.trim(),
           filters: requestFilters,
+          collection,
           first: PAGE_SIZE,
           sortKey: apiSort,
           reverse,
@@ -94,33 +88,11 @@ function Shop() {
       loadMoreRequestId.current += 1;
       window.clearTimeout(timeoutId);
     };
-  }, [apiSort, requestFilters, reverse, search, refreshVersion]);
-
-  useEffect(() => {
-    if (!legacyCategory || selectedFilters.length > 0 || searchResults.filters.length === 0) return;
-
-    const targetLabel = LEGACY_CATEGORY_LABELS[legacyCategory];
-    const targetFilter = searchResults.filters.find((filter) => filter.id === 'filter.p.product_type');
-    const targetValue = targetFilter?.values.find((value) => value.label.toLowerCase() === targetLabel?.toLowerCase());
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('category');
-
-    if (targetFilter && targetValue) {
-      nextParams.append('filter', JSON.stringify({
-        filterId: targetFilter.id,
-        valueId: targetValue.id,
-        label: targetValue.label,
-        input: targetValue.input,
-      }));
-    }
-
-    setSearchParams(nextParams, { replace: true });
-  }, [legacyCategory, searchParams, searchResults.filters, selectedFilters.length, setSearchParams]);
+  }, [apiSort, collection, requestFilters, reverse, search, refreshVersion]);
 
   const updateSelectedFilters = (nextFilters) => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('filter');
-    nextParams.delete('category');
     nextFilters.forEach((filter) => nextParams.append('filter', JSON.stringify(filter)));
     setSearchParams(nextParams);
   };
@@ -144,7 +116,7 @@ function Shop() {
   };
 
   const clearAllFilters = () => {
-    setSearchParams({});
+    setSearchParams(collection ? { collection } : {});
     setSearch('');
     setPriceDraft(null);
   };
@@ -163,6 +135,7 @@ function Shop() {
       const result = await searchProducts({
         query: search.trim(),
         filters: requestFilters,
+        collection,
         first: PAGE_SIZE,
         after: cursor,
         sortKey: apiSort,
@@ -252,7 +225,7 @@ function Shop() {
 
         <section className="min-w-0" aria-label="Products">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-2xl font-semibold">Shop all</h1>
+            <h1 className="text-2xl font-semibold">{collection ? collection.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') : 'Shop all'}</h1>
             <div className="flex items-center gap-4">
               <p className="text-xs text-gray-500" aria-live="polite">{totalCount.toLocaleString()} items</p>
               <label className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm">

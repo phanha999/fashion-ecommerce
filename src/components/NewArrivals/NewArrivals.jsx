@@ -11,7 +11,7 @@ function NewArrivals() {
 
     async function loadProducts() {
       try {
-        const newArrivals = await getNewArrivalProducts();
+        const newArrivals = await getNewArrivalProducts({ first: 8 });
         if (!cancelled) {
           setProducts(newArrivals);
           setStatus('success');

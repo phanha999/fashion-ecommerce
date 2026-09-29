@@ -1,3 +1,4 @@
+import storefrontMedia from '../../data/storefrontMedia';
 import './GridBanner.scss';
 
 const banners = [
@@ -6,8 +7,8 @@ const banners = [
     title: 'Men Collection',
     subtitle: 'Modern essentials for everyday style',
     image:
-      'https://images.unsplash.com/photo-1516826957135-700dedea698c',
-    link: '/shop?category=men',
+      storefrontMedia.collections.men,
+    link: '/shop?collection=men',
     className: 'grid-banner-featured',
   },
   {
@@ -15,8 +16,8 @@ const banners = [
     title: 'Women Collection',
     subtitle: 'Effortless style, made for you',
     image:
-      'https://images.unsplash.com/photo-1483985988355-763728e1935b',
-    link: '/shop?category=women',
+      storefrontMedia.collections.women,
+    link: '/shop?collection=women',
     className: 'grid-banner-small',
   },
   {
@@ -24,8 +25,8 @@ const banners = [
     title: 'New Season',
     subtitle: 'Discover the latest arrivals',
     image:
-      'https://images.unsplash.com/photo-1445205170230-053b83016050',
-    link: '/shop?category=new',
+      storefrontMedia.collections.newSeason,
+    link: '/shop?collection=new',
     className: 'grid-banner-small',
   },
   {
@@ -33,8 +34,8 @@ const banners = [
     title: 'Shoes',
     subtitle: 'Step into something new',
     image:
-      'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
-    link: '/shop?category=shoes',
+      storefrontMedia.collections.shoes,
+    link: '/shop?collection=shoes',
     className: 'grid-banner-small',
   },
   {
@@ -42,8 +43,8 @@ const banners = [
     title: 'Accessories',
     subtitle: 'Complete your everyday look',
     image:
-      'https://images.unsplash.com/photo-1523170335258-f5ed11844a49',
-    link: '/shop?category=accessories',
+      storefrontMedia.collections.accessories,
+    link: '/shop?collection=accessories',
     className: 'grid-banner-small',
   },
   {
@@ -51,8 +52,8 @@ const banners = [
     title: 'Essentials',
     subtitle: 'Timeless pieces for every wardrobe',
     image:
-      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d',
-    link: '/shop?category=essentials',
+      storefrontMedia.collections.essentials,
+    link: '/shop?collection=essentials',
     className: 'grid-banner-featured',
   },
 ];

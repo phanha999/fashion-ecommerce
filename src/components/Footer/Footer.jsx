@@ -22,7 +22,7 @@ function Footer() {
               trends, and inspirations.
             </p>
 
-            <div className="mt-5 flex gap-4 sm:gap-[30px]">
+            <div className="mt-5 flex gap-2">
               <a
                 href="#"
                 className="flex h-9 w-9 items-center justify-center border border-gray-200 text-gray-700 transition hover:bg-gray-900 hover:text-white"
@@ -34,7 +34,7 @@ function Footer() {
                 href="#"
                 className="flex h-9 w-9 items-center justify-center border border-gray-200 text-gray-700 transition hover:bg-gray-900 hover:text-white"
               >
-                <FaInstagram size={14} />
+                <FaInstagram size={14} /> 
               </a>
 
               <a

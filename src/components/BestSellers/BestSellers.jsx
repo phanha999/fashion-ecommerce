@@ -12,7 +12,10 @@ function BestSellers() {
 
     async function loadProducts() {
       try {
-        const bestSellers = await getBestSellerProducts();
+        const bestSellers = await getBestSellerProducts({
+          collectionHandle: 'best-sellers',
+          first: 5,
+        });
         if (!cancelled) {
           setProducts(bestSellers);
           setStatus("success");
@@ -23,7 +26,7 @@ function BestSellers() {
       }
     }
 
-    loadProducts();
+    loadProducts();  
     return () => {
       cancelled = true;
     };

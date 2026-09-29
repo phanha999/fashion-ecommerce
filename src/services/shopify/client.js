@@ -23,4 +23,4 @@ export async function shopifyFetch(query, variables = {}) {
   }
 
   return payload.data;
-}
+} 

@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { featuredProducts as products } from '../products.data';
+import { getNewArrivalProducts } from '../../services/shopify/productService';
 
 function ProductItem({ product }) {
   return (
@@ -36,6 +37,31 @@ function ProductItem({ product }) {
 }
 
 function FeaturedProducts() {
+  const [products, setProducts] = useState([]);
+  const [status, setStatus] = useState('loading');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProducts() {
+      try {
+        const newArrivals = await getNewArrivalProducts({ first: 9 });
+        if (!cancelled) {
+          setProducts(newArrivals);
+          setStatus('success');
+        }
+      } catch (error) {
+        console.error('Could not load new arrivals:', error);
+        if (!cancelled) setStatus('error');
+      }
+    }
+
+    loadProducts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16 pb-20">
 
@@ -78,14 +104,26 @@ function FeaturedProducts() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:gap-[30px] md:grid-cols-3 lg:col-span-3">
-          {products.map((product) => (
-            <ProductItem
-              key={product.id}
-              product={product}
-            />
-          ))}
-        </div>
+        {status === 'loading' && (
+          <p className="py-10 text-center text-sm text-gray-500">Loading new arrivals…</p>
+        )}
+        {status === 'error' && (
+          <p className="py-10 text-center text-sm text-gray-500" role="status">
+            New arrivals are temporarily unavailable.
+          </p>
+        )}
+        {status === 'success' && products.length === 0 && (
+          <p className="py-10 text-center text-sm text-gray-500">
+            No new arrivals are available right now.
+          </p>
+        )}
+        {status === 'success' && products.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 sm:gap-[30px] md:grid-cols-3 lg:col-span-3">
+            {products.map((product) => (
+              <ProductItem key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

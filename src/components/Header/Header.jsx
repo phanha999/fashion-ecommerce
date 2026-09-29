@@ -28,21 +28,21 @@ function Header() {
           </Link> 
  
           <Link
-            to="/shop?category=men"
+            to="/shop?collection=men"
             className="relative inline-flex shrink-0 items-center py-2 text-xs font-semibold text-heading duration-500 hover:text-[#FF5722] sm:text-sm xl:text-base"
           >
             Men
           </Link>
 
           <Link
-            to="/shop?category=women"
+            to="/shop?collection=women"
             className="relative inline-flex shrink-0 items-center py-2 text-xs font-semibold text-heading duration-500 hover:text-[#FF5722] sm:text-sm xl:text-base"
           >
             Women
           </Link>
 
           <Link
-            to="/shop?category=shoes"
+            to="/shop?collection=shoes"
             className="relative inline-flex shrink-0 items-center py-2 text-xs font-semibold text-heading duration-500 hover:text-[#FF5722] sm:text-sm xl:text-base"
           >
             Shoes

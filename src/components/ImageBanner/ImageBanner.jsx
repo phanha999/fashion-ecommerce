@@ -1,3 +1,4 @@
+import storefrontMedia from '../../data/storefrontMedia';
 import { Link } from 'react-router-dom';
 
 function ImageBanner() {
@@ -5,7 +6,7 @@ function ImageBanner() {
     <section className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16 py-20">
         <div className="relative h-[420px] overflow-hidden sm:h-[500px] lg:h-[600px]">
             <img
-                src="https://images.unsplash.com/photo-1483985988355-763728e1935b"
+                src={storefrontMedia.promotionalBanner}
                 alt="Discover the new collection"
                 className="h-full w-full object-cover"
             />

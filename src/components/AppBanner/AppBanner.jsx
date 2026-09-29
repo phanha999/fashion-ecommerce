@@ -1,3 +1,4 @@
+import storefrontMedia from '../../data/storefrontMedia';
 import { Link } from 'react-router-dom';
 
 function AppBanner() {
@@ -8,7 +9,7 @@ function AppBanner() {
           
           <div className="relative min-h-[350px] overflow-hidden lg:min-h-0">
             <img
-              src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9"
+              src={storefrontMedia.appBanner}
               alt="Velora mobile app"
               className="absolute inset-0 h-full w-full object-cover"
             />
