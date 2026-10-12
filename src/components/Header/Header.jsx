@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useSite } from '../../contexts/siteContext';
 import { Link } from 'react-router-dom';
+import { useCustomerAccount } from '../../contexts/customerAccountContext';
+import { useCart } from '../../contexts/cartContext';
 import SearchPopup from '../SearchPopup/SearchPopup';
 
 function Header() {
+  const { cart } = useCart();
+  const { site } = useSite();
+  const { customer } = useCustomerAccount();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex min-h-20 w-full max-w-[1920px] flex-wrap items-center justify-between gap-4 sm:gap-[30px] px-4 py-3 md:h-20 md:flex-nowrap md:px-8 md:py-0 2xl:px-16">
@@ -12,7 +19,7 @@ function Header() {
           to="/"
           className="text-2xl font-bold tracking-[0.2em] text-gray-900"
         >
-          VELORA
+          {site?.name || 'Store'}
         </Link>
 
         <nav className="order-3 flex w-full items-center justify-start gap-4 overflow-x-auto sm:justify-center sm:gap-[30px] md:order-none md:w-auto">
@@ -53,6 +60,7 @@ function Header() {
         </nav>
 
         <div className="flex items-center">
+          <Link to="/wishlist" aria-label="Wishlist" className="px-2 py-2">♡</Link>
           <button
             type="button"
             aria-label="Search"
@@ -66,7 +74,8 @@ function Header() {
 
           <Link
             to="/account"
-            aria-label="Account"
+            aria-label={customer ? 'Your account' : 'Sign in'}
+            title={customer ? (customer.firstName || customer.displayName || 'Your account') : 'Sign in'}
             className="relative inline-flex items-center px-1.5 py-2 text-xs font-semibold text-heading duration-500 hover:text-[#FF5722] sm:px-2 sm:text-sm xl:px-4 xl:text-base"
           >
             <svg focusable="false" width="18" height="17" className="svg-user" viewBox="0 0 18 17">
@@ -77,18 +86,19 @@ function Header() {
 
           <Link
             to="/cart"
-            aria-label="Cart"
+            aria-label={'Cart, ' + (cart?.totalQuantity || 0) + ' items'}
             className="relative inline-flex items-center px-1.5 py-2 text-xs font-semibold text-heading duration-500 hover:text-[#FF5722] sm:px-2 sm:text-sm xl:px-4 xl:text-base"
           >
             <svg focusable="false" width="20" height="18" className="svg-cart" viewBox="0 0 20 18">
               <path d="M3 1h14l1 16H2L3 1z" fill="none" stroke="currentColor" strokeWidth="2"></path>
               <path d="M7 4v0a3 3 0 003 3v0a3 3 0 003-3v0" fill="none" stroke="currentColor" strokeWidth="2"></path>
             </svg>
+            {cart?.totalQuantity > 0 && <span className="ml-1 rounded-full bg-gray-900 px-1.5 text-xs text-white">{cart.totalQuantity}</span>}
           </Link>
         </div>
 
       </div>
-      <SearchPopup isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <SearchPopup isOpen={isSearchOpen} onClose={closeSearch} />
     </header>
   );
 }

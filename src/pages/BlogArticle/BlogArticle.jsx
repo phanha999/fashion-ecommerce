@@ -1,3 +1,4 @@
+import Seo from '../../components/Seo';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getBlogArticle } from '../../services/shopify/blogService';
@@ -30,7 +31,8 @@ function BlogArticle() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-16 md:px-8">
-      <Link to="/" className="text-sm text-gray-600 underline underline-offset-4">
+      <Seo title={article?.title || 'Journal'} description={article?.description || ''} image={article?.image} />
+      <Link to="/blogs" className="text-sm text-gray-600 underline underline-offset-4">
         Back to home
       </Link>
 

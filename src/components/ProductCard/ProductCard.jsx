@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useWishlist } from '../../hooks/useWishlist';
 
 function ProductCard({ product, imageRatio = 'portrait' }) {
+  const { ids, toggle } = useWishlist();
   const formattedPrice = new Intl.NumberFormat(undefined, {
     style: 'currency',
     currency: product.currencyCode || 'USD',
@@ -14,8 +16,9 @@ function ProductCard({ product, imageRatio = 'portrait' }) {
     : undefined;
 
   return (
-    <div>
-      <Link to={`/products/${product.id}`} className="group block overflow-hidden">
+    <div className="relative">
+      <button type="button" aria-label={ids.includes(product.id) ? 'Remove from wishlist' : 'Save to wishlist'} aria-pressed={ids.includes(product.id)} onClick={() => toggle(product.id)} className="absolute right-3 top-3 z-10 rounded-full bg-white px-3 py-2 shadow">{ids.includes(product.id) ? '♥' : '♡'}</button>
+      <Link to={`/products/${encodeURIComponent(product.handle || product.id)}`} className="group block overflow-hidden">
         <div className={`relative ${imageRatioClass} overflow-hidden rounded-md bg-gray-100`} style={imageStyle}>
           <img
             src={product.image}

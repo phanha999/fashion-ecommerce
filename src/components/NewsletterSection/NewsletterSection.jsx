@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import NewsletterForm from '../NewsletterForm';
 import { getBanners } from '../../services/shopify/contentService';
 
 function NewsletterSection() {
@@ -79,23 +80,7 @@ function NewsletterSection() {
               </p>
             )}
 
-            <form className="mx-auto mt-8 flex max-w-xl flex-col sm:flex-row">
-              <input
-                type="email"
-                name="email"
-                required
-                placeholder="Enter your email address"
-                aria-label="Email address"
-                className="min-w-0 flex-1 border border-gray-300 bg-white px-5 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-900"
-              />
-
-              <button
-                type="submit"
-                className="shrink-0 bg-gray-900 px-8 py-3 text-sm font-medium text-white transition hover:bg-gray-700"
-              >
-                {banner.buttonLabel || 'Subscribe'}
-              </button>
-            </form>
+            <NewsletterForm label={banner.buttonLabel || 'Subscribe'} />
           </div>
         </div>
       </div>

@@ -1,3 +1,5 @@
+import Seo from '../../components/Seo';
+import { useSite } from '../../contexts/siteContext';
 import HeroBanner from '../../components/HeroBanner/HeroBanner';
 import CategorySection from '../../components/CategorySection/CategorySection';
 import NewArrivals from '../../components/NewArrivals/NewArrivals';
@@ -13,8 +15,10 @@ import NewsletterSection from '../../components/NewsletterSection/NewsletterSect
 import InstagramSection from '../../components/InstagramSection/InstagramSection';
 
 function Home() {
+  const { site } = useSite();
   return (
     <>
+      <Seo title={site?.name || 'Store'} description={site?.description || 'Explore our latest collections.'} />
       <HeroBanner />
       <CategorySection />
       <NewArrivals />

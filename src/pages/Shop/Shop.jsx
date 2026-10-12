@@ -1,3 +1,4 @@
+import Seo from '../../components/Seo';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../../components/ProductCard/ProductCard';
@@ -21,8 +22,18 @@ function formatMoney(amount, currencyCode = 'USD') {
 function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchResults, setSearchResults] = useState({ products: [], filters: [], totalCount: 0, pageInfo: {} });
-  const [search, setSearch] = useState('');
-  const [sort, setSort] = useState('title-ascending');
+  const search = searchParams.get('q') || '';
+  function setSearch(value) {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set('q', value); else next.delete('q');
+    setSearchParams(next, { replace: true });
+  }
+  const sort = searchParams.get('sort') || 'title-ascending';
+  function setSort(value) {
+    const next = new URLSearchParams(searchParams);
+    next.set('sort', value);
+    setSearchParams(next);
+  }
   const [status, setStatus] = useState('loading');
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
@@ -106,6 +117,12 @@ function Shop() {
   };
 
   const applyPrice = () => {
+    const min = Number(priceDraftValues.min);
+    const max = Number(priceDraftValues.max);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < min) {
+      setError('Enter a valid price range. Minimum must not exceed maximum.');
+      return;
+    }
     const selection = {
       filterId: priceFilter.id,
       valueId: 'custom-price-range',
@@ -217,6 +234,7 @@ function Shop() {
 
   return (
     <main className="mx-auto max-w-[1920px] px-4 pb-16 pt-8 sm:px-6 lg:px-10 2xl:px-16">
+      <Seo title="Shop all" description="Explore products and collections." />
       <nav aria-label="Breadcrumb" className="mb-8 text-xs text-gray-500"><span>Home</span><span className="mx-2">/</span><span className="text-gray-900">Search</span></nav>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
@@ -253,6 +271,7 @@ function Shop() {
 
           {status === 'loading' && <p className="py-20 text-center text-sm text-gray-500">Loading products and Shopify filters…</p>}
           {status === 'updating' && <p className="mb-4 text-xs text-gray-400" aria-live="polite">Updating results…</p>}
+          {error && status !== 'error' && <p role="alert" className="mb-4 text-sm text-red-700">{error}</p>}
           {status === 'error' && <div className="py-20 text-center" role="alert"><h2 className="text-lg font-medium">Could not load Shopify results</h2><p className="mt-2 text-sm text-gray-500">{error}</p></div>}
           {status !== 'loading' && status !== 'error' && visibleProducts.length > 0 && (
             <>

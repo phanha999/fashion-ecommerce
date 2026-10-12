@@ -19,15 +19,14 @@ const SHOP_SEARCH_QUERY = `
     ) {
       totalCount
       pageInfo { hasNextPage endCursor }
-      productFilters {
-        id
+      productFilters { id
         label
         type
         values { id label count input }
       }
       nodes {
         ... on Product {
-          id
+          id handle
           availableForSale
           title
           description
@@ -47,6 +46,7 @@ function mapProduct(product) {
 
   return {
     id: product.id,
+    handle: product.handle,
     availableForSale: product.availableForSale,
     name: product.title,
     description: product.description,
@@ -78,7 +78,7 @@ const CATALOG_QUERY = `
     products(first: $first, after: $after, sortKey: ID) {
       pageInfo { hasNextPage endCursor }
       nodes {
-        id title description vendor tags availableForSale
+        id handle title description vendor tags availableForSale
         featuredImage { url altText width height }
         priceRange { minVariantPrice { amount currencyCode } }
       }
@@ -105,21 +105,9 @@ const COLLECTION_PRODUCTS_QUERY = `
 const RESULT_PAGE_SIZE = 250;
 const resultsCache = new Map();
 
-async function loadResults(query, filters, sortKey, reverse, collection = '') {
-  const availabilitySelections = new Set(filters
-    .filter((filter) => typeof filter.available === 'boolean')
-    .map((filter) => filter.available));
-  const brandSelections = new Set(filters
-    .filter((filter) => typeof filter.productVendor === 'string')
-    .map((filter) => filter.productVendor));
-  const otherFilters = filters.flatMap((filter) => {
-    const remaining = { ...filter };
-    delete remaining.available;
-    delete remaining.productVendor;
-    return Object.keys(remaining).length ? [remaining] : [];
-  });
-  const useCollection = Boolean(collection);
-  const useCatalog = !useCollection && !query.trim() && otherFilters.length === 0;
+const snapshotCache = new Map();
+const SNAPSHOT_TTL = 30000;
+async function loadSnapshot(query, otherFilters, sortKey, reverse, collection, useCollection, useCatalog) {
   let after = null;
   let availableFilters = [];
   const productsById = new Map();
@@ -162,7 +150,35 @@ async function loadResults(query, filters, sortKey, reverse, collection = '') {
     }
   } while (after);
 
-  const matchingProducts = [...productsById.values()].filter((product) => {
+  return { products: [...productsById.values()], filters: availableFilters };
+}
+async function loadResults(query, filters, sortKey, reverse, collection = '') {
+  const availabilitySelections = new Set(filters
+    .filter((filter) => typeof filter.available === 'boolean')
+    .map((filter) => filter.available));
+  const brandSelections = new Set(filters
+    .filter((filter) => typeof filter.productVendor === 'string')
+    .map((filter) => filter.productVendor));
+  const otherFilters = filters.flatMap((filter) => {
+    const remaining = { ...filter };
+    delete remaining.available;
+    delete remaining.productVendor;
+    return Object.keys(remaining).length ? [remaining] : [];
+  });
+  const useCollection = Boolean(collection);
+  const useCatalog = !useCollection && !query.trim() && otherFilters.length === 0;
+  const snapshotKey = JSON.stringify([collection, query, otherFilters, useCatalog || useCollection ? '' : sortKey, useCatalog || useCollection ? false : reverse]);
+  let cached = snapshotCache.get(snapshotKey);
+  if (!cached || cached.expiresAt <= Date.now()) {
+    const promise = loadSnapshot(query, otherFilters, sortKey, reverse, collection, useCollection, useCatalog);
+    cached = { promise, expiresAt: Date.now() + SNAPSHOT_TTL };
+    if (snapshotCache.size >= 10) snapshotCache.delete(snapshotCache.keys().next().value);
+    snapshotCache.set(snapshotKey, cached);
+    promise.catch(() => { if (snapshotCache.get(snapshotKey)?.promise === promise) snapshotCache.delete(snapshotKey); });
+  }
+  const snapshot = await cached.promise;
+  let availableFilters = snapshot.filters;
+  const matchingProducts = snapshot.products.filter((product) => {
     if (!useCollection || !query.trim()) return true;
     const term = query.trim().toLocaleLowerCase();
     return [product.name, product.description, product.brand].some((value) => value.toLocaleLowerCase().includes(term));
@@ -237,7 +253,7 @@ const HOME_PRODUCTS_QUERY = `
   query HomeProducts($first: Int!, $sortKey: ProductSortKeys!, $reverse: Boolean!) {
     products(first: $first, sortKey: $sortKey, reverse: $reverse) {
       nodes {
-        id
+        id handle
         title
         description
         vendor
@@ -267,7 +283,7 @@ const BEST_SELLERS_COLLECTION_QUERY = `
     collection(handle: $handle) {
       products(first: $first, sortKey: BEST_SELLING) {
         nodes {
-          id
+          id handle
           title
           description
           vendor
@@ -302,7 +318,7 @@ const QUICK_PRODUCT_SEARCH_QUERY = `
     search(query: $query, first: $first, types: [PRODUCT]) {
       nodes {
         ... on Product {
-          id
+          id handle
           title
           featuredImage { url altText }
           priceRange { minVariantPrice { amount currencyCode } }
@@ -323,10 +339,42 @@ export async function quickSearchProducts(query, first = 6) {
 
   return (data.search?.nodes || []).map((product) => ({
     id: product.id,
+    handle: product.handle,
     title: product.title,
     image: product.featuredImage?.url || '',
     imageAlt: product.featuredImage?.altText || product.title,
     price: product.priceRange.minVariantPrice.amount,
     currencyCode: product.priceRange.minVariantPrice.currencyCode,
   }));
+}
+
+export async function getProductDetail(id) {
+  const byId = id.startsWith('gid://shopify/Product/');
+  const lookup = byId ? 'node(id: $id) { ... on Product {' : 'product(handle: $handle) {';
+  const close = byId ? '} }' : '}';
+  let after = null;
+  let product;
+  const variants = [];
+  do {
+    const data = await shopifyFetch(`query ProductDetail(${byId ? '$id: ID!' : '$handle: String!'}, $after: String) {
+      ${lookup}
+        id handle title description vendor seo { title description }
+        images(first: 100) { nodes { url altText } }
+        reviews: metafield(namespace: "custom", key: "reviews") { value }
+        featuredImage { url altText }
+        variants(first: 250, after: $after) {
+          nodes { id title availableForSale price { amount currencyCode } image { url altText } selectedOptions { name value } }
+          pageInfo { hasNextPage endCursor }
+        }
+      ${close}
+    }`, { ...(byId ? { id } : { handle: id }), after });
+    const found = data.node || data.product;
+    if (!found) throw new Error('This product was not found.');
+    product = found;
+    variants.push(...product.variants.nodes);
+    const page = product.variants.pageInfo;
+    if (page.hasNextPage && (!page.endCursor || page.endCursor === after)) throw new Error('Could not load product variants.');
+    after = page.hasNextPage ? page.endCursor : null;
+  } while (after);
+  return { ...product, variants };
 }

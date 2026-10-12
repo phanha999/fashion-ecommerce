@@ -7,7 +7,7 @@ import { getBanners } from '../../services/shopify/contentService';
 function ProductItem({ product }) {
   return (
     <Link
-      to={`/products/${product.id}`}
+      to={`/products/${encodeURIComponent(product.id)}`}
       className="group flex gap-4 sm:gap-[30px]"
     >
 
@@ -166,7 +166,7 @@ function FeaturedProducts() {
         {status === 'success' && products.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:gap-[30px] md:grid-cols-3 lg:col-span-3">
             {products.map((product) => (
-              <ProductItem key={product.id} product={product} />
+              <ProductItem key={encodeURIComponent(product.id)} product={product} />
             ))}
           </div>
         )}
