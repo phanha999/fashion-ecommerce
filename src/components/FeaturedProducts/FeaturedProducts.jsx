@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import BannerLink from '../BannerLink';
 import { getNewArrivalProducts } from '../../services/shopify/productService';
+import { getBanners } from '../../services/shopify/contentService';
 
 function ProductItem({ product }) {
   return (
@@ -40,6 +42,10 @@ function FeaturedProducts() {
   const [products, setProducts] = useState([]);
   const [status, setStatus] = useState('loading');
 
+  const [banners, setBanners] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
   useEffect(() => {
     let cancelled = false;
 
@@ -62,6 +68,26 @@ function FeaturedProducts() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    getBanners({ handle: 'new-season' })
+      .then((shopifyBanners) => {
+        if (!cancelled) setBanners(shopifyBanners);
+      })
+      .catch((error) => {
+        console.error('Could not load Shopify banners:', error);
+        if (!cancelled) setLoadError(error.message || 'Unknown Shopify error.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16 pb-20">
 
@@ -77,32 +103,52 @@ function FeaturedProducts() {
 
       <div className="grid grid-cols-1 gap-4 sm:gap-[30px] lg:grid-cols-4">
 
-        <div className="relative min-h-[420px] overflow-hidden md:min-h-[520px] lg:col-span-1 lg:min-h-[600px]">
-          <img
-            src="https://images.unsplash.com/photo-1445205170230-053b83016050"
-            alt="Featured collection"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+        {isLoading ? (
+          <div aria-label="Loading banners" className="h-[420px] animate-pulse bg-gray-100 sm:h-[500px] lg:h-[600px]"/>
+        ) : loadError ? (
+          <p className="mx-auto max-w-3xl rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+            Shopify banners could not be loaded. {loadError}
+          </p>
+        ) : banners.length === 0 ? (
+          <p className="text-center text-sm text-gray-500">
+            Shopify returned no banner entries with images.
+          </p>
+        ) : (
+          <div>
+            {banners.map((banner) => (
+              <div key={banner.id} className="relative min-h-[420px] overflow-hidden md:min-h-[520px] lg:col-span-1 lg:min-h-[600px]">
+                <img
+                  src={banner.image}
+                  alt={banner.imageAlt || ''}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
 
-          <div className="absolute inset-0 bg-black/25" />
+                <div className="absolute inset-0 bg-black/25" />
 
-          <div className="absolute bottom-0 left-0 p-8 text-white">
-            <p className="text-sm uppercase tracking-[0.2em]">
-              New Season
-            </p>
+                <div className="absolute bottom-0 left-0 p-8 text-white">
 
-            <h3 className="mt-2 text-3xl font-bold">
-              Timeless Essentials
-            </h3>
+                    {banner.subtitle && (
+                      <p className="text-sm uppercase tracking-[0.2em]">
+                        {banner.subtitle}
+                      </p>
+                    )}
 
-            <Link
-              to="/shop"
-              className="mt-5 inline-block border border-white px-6 py-3 text-sm transition hover:bg-white hover:text-black"
-            >
-              Shop Collection
-            </Link>
+                    <h2 className="mt-2 text-3xl font-bold">
+                      {banner.title}
+                    </h2>
+
+                    <BannerLink
+                      to={banner.link}
+                      className="mt-5 inline-block border border-white px-6 py-3 text-sm transition hover:bg-white hover:text-black"
+                    >
+                      {banner.buttonLabel}
+                    </BannerLink>
+
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
 
         {status === 'loading' && (
           <p className="py-10 text-center text-sm text-gray-500">Loading new arrivals…</p>

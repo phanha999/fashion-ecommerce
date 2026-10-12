@@ -45,7 +45,7 @@ function HeroBanner() {
     return (
       <section className="mx-auto my-6 max-w-7xl px-6" role="alert">
         <p className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          Hero Shopify chưa hiển thị. {loadError || 'Shopify không trả về banner nào.'}
+          Shopify hero banners are not available. {loadError || 'Shopify returned no hero banners.'}
         </p>
       </section>
     );
@@ -104,4 +104,5 @@ function HeroBanner() {
 }
 
 export default HeroBanner;
+
 

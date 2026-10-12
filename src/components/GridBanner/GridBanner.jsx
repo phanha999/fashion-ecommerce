@@ -1,64 +1,32 @@
-import storefrontMedia from '../../data/storefrontMedia';
+import { useEffect, useState } from 'react';
+import { getCollection } from '../../services/shopify/contentService';
 import './GridBanner.scss';
 
-const banners = [
-  {
-    id: 1,
-    title: 'Men Collection',
-    subtitle: 'Modern essentials for everyday style',
-    image:
-      storefrontMedia.collections.men,
-    link: '/shop?collection=men',
-    className: 'grid-banner-featured',
-  },
-  {
-    id: 2,
-    title: 'Women Collection',
-    subtitle: 'Effortless style, made for you',
-    image:
-      storefrontMedia.collections.women,
-    link: '/shop?collection=women',
-    className: 'grid-banner-small',
-  },
-  {
-    id: 3,
-    title: 'New Season',
-    subtitle: 'Discover the latest arrivals',
-    image:
-      storefrontMedia.collections.newSeason,
-    link: '/shop?collection=new',
-    className: 'grid-banner-small',
-  },
-  {
-    id: 4,
-    title: 'Shoes',
-    subtitle: 'Step into something new',
-    image:
-      storefrontMedia.collections.shoes,
-    link: '/shop?collection=shoes',
-    className: 'grid-banner-small',
-  },
-  {
-    id: 5,
-    title: 'Accessories',
-    subtitle: 'Complete your everyday look',
-    image:
-      storefrontMedia.collections.accessories,
-    link: '/shop?collection=accessories',
-    className: 'grid-banner-small',
-  },
-  {
-    id: 6,
-    title: 'Essentials',
-    subtitle: 'Timeless pieces for every wardrobe',
-    image:
-      storefrontMedia.collections.essentials,
-    link: '/shop?collection=essentials',
-    className: 'grid-banner-featured',
-  },
-];
-
 function GridBanner() {
+  const [collections, setCollections] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getCollection()
+      .then((shopifyCollections) => {
+        if (!cancelled) setCollections(shopifyCollections);
+      })
+      .catch((error) => {
+        console.error('Could not load Shopify collections:', error);
+        if (!cancelled) setLoadError(error.message || 'Unknown Shopify error.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16">
       <div className="mb-10 text-center">
@@ -71,37 +39,69 @@ function GridBanner() {
         </h2>
       </div>
 
-      <div className="grid-banner-grid mb-12 md:mb-14 xl:mb-16 mx-auto">
-        {banners.map((banner) => (
-          <a
-            key={banner.id}
-            href={banner.link}
-            className={`group relative block overflow-hidden ${banner.className}`}
-          >
-            <img
-              src={banner.image}
-              alt={banner.title}
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+      {isLoading ? (
+        <div
+          aria-label="Loading collections"
+          className="grid grid-cols-2 gap-4 sm:gap-[30px] md:grid-cols-4"
+        >
+          {Array.from({ length: 4 }, (_, index) => (
+            <div
+              key={index}
+              className="aspect-[3/4] animate-pulse bg-gray-100"
             />
+          ))}
+        </div>
+      ) : loadError ? (
+        <p
+          className="mx-auto max-w-3xl rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          role="alert"
+        >
+          Shopify collections could not be loaded. {loadError}
+        </p>
+      ) : collections.length === 0 ? (
+        <p className="text-center text-sm text-gray-500">
+          Shopify returned no collection entries with images.
+        </p>
+      ) : (
+        <div className="grid-banner-grid mx-auto mb-12 md:mb-14 xl:mb-16">
+          {collections.map((collection, index) => {
+            const layoutClass =
+              index === 0 || index === 3
+                ? 'grid-banner-featured'
+                : 'grid-banner-small'; 
 
-            <div className="absolute inset-0 bg-black/20 transition duration-300 group-hover:bg-black/40" />
+            return (
+              <a
+                key={collection.id}
+                href={collection.link}
+                className={`group relative block overflow-hidden ${layoutClass}`}
+              >
+                <img
+                  src={collection.image}
+                  alt={collection.imageAlt || collection.title}
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
 
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-              <h3 className="text-2xl font-semibold">
-                {banner.title}
-              </h3>
+                <div className="absolute inset-0 bg-black/20 transition duration-300 group-hover:bg-black/40" />
 
-              <p className="mt-1 text-sm text-white/90">
-                {banner.subtitle}
-              </p>
+                <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                  <h3 className="text-2xl font-semibold">
+                    {collection.title}
+                  </h3>
 
-              <span className="mt-4 inline-block text-sm font-medium underline underline-offset-4">
-                Shop now
-              </span>
-            </div>
-          </a>
-        ))}
-      </div>
+                  <p className="mt-1 text-sm text-white/90">
+                    {collection.description}
+                  </p>
+
+                  <span className="mt-4 inline-block text-sm font-medium underline underline-offset-4">
+                    Shop now
+                  </span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

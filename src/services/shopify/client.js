@@ -1,6 +1,9 @@
-const storeDomain = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN;
-const storefrontToken = import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN;
-const apiVersion = import.meta.env.VITE_SHOPIFY_API_VERSION || '2026-07';
+const storeDomain = (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || '')
+  .trim()
+  .replace(/^https?:\/\//, '')
+  .replace(/\/+$/, '');
+const storefrontToken = (import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN || '').trim();
+const apiVersion = (import.meta.env.VITE_SHOPIFY_API_VERSION || '2026-07').trim();
 
 export async function shopifyFetch(query, variables = {}) {
   if (!storeDomain || !storefrontToken) {
@@ -23,4 +26,4 @@ export async function shopifyFetch(query, variables = {}) {
   }
 
   return payload.data;
-} 
+}

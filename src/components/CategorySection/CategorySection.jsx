@@ -57,11 +57,11 @@ function CategorySection() {
             className="mx-auto max-w-3xl rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800"
             role="alert"
           >
-            Shopify categories chưa tải được. {loadError}
+            Shopify categories could not be loaded. {loadError}
           </p>
         ) : categories.length === 0 ? (
           <p className="text-center text-sm text-gray-500">
-            Shopify chưa trả về Category entries có ảnh.
+            Shopify returned no Category entries with images.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:gap-[30px] md:grid-cols-4">
@@ -94,4 +94,5 @@ function CategorySection() {
 }
 
 export default CategorySection;
+
 

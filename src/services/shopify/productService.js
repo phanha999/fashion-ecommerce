@@ -296,3 +296,37 @@ export async function getBestSellerProducts({ collectionHandle, first = 5 } = {}
 }
 
 
+
+const QUICK_PRODUCT_SEARCH_QUERY = `
+  query QuickProductSearch($query: String!, $first: Int!) {
+    search(query: $query, first: $first, types: [PRODUCT]) {
+      nodes {
+        ... on Product {
+          id
+          title
+          featuredImage { url altText }
+          priceRange { minVariantPrice { amount currencyCode } }
+        }
+      }
+    }
+  }
+`;
+
+export async function quickSearchProducts(query, first = 6) {
+  const normalizedQuery = query?.trim();
+  if (!normalizedQuery) return [];
+
+  const data = await shopifyFetch(QUICK_PRODUCT_SEARCH_QUERY, {
+    query: normalizedQuery,
+    first,
+  });
+
+  return (data.search?.nodes || []).map((product) => ({
+    id: product.id,
+    title: product.title,
+    image: product.featuredImage?.url || '',
+    imageAlt: product.featuredImage?.altText || product.title,
+    price: product.priceRange.minVariantPrice.amount,
+    currencyCode: product.priceRange.minVariantPrice.currencyCode,
+  }));
+}

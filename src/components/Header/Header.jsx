@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import SearchPopup from '../SearchPopup/SearchPopup';
 
 function Header() {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex min-h-20 w-full max-w-[1920px] flex-wrap items-center justify-between gap-4 sm:gap-[30px] px-4 py-3 md:h-20 md:flex-nowrap md:px-8 md:py-0 2xl:px-16">
@@ -53,6 +56,7 @@ function Header() {
           <button
             type="button"
             aria-label="Search"
+            onClick={() => setIsSearchOpen(true)}
             className="relative inline-flex items-center px-1.5 py-2 text-xs font-semibold text-heading duration-500 hover:text-[#FF5722] sm:px-2 sm:text-sm xl:px-4 xl:text-base"
           >
             <svg className="svg-search" focusable="false" width="18" height="18" viewBox="0 0 18 18">
@@ -84,6 +88,7 @@ function Header() {
         </div>
 
       </div>
+      <SearchPopup isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }
