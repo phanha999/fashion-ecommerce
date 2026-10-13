@@ -39,7 +39,7 @@ Run npm run verify to check lint and the production build.
 
 Use HTTPS hosting with the included route rewrites. Set public Shopify environment variables during build. Never expose an Admin token, private Storefront token or client secret.
 
-Vercel and Netlify configuration files are included. Both use `npm run build:deploy`, which generates a fresh sitemap before building. Set `VITE_SITE_URL` to the real frontend HTTPS origin in the host's build environment. Deployment environment variables take precedence over local environment files. A domain is not needed for local development or `npm run verify`.
+Vercel and Netlify configuration files are included. Both use `npm run build:deploy`, which generates a fresh sitemap before building. Set `VITE_SITE_URL` to the real frontend HTTPS origin in the host's build environment. On Vercel, leaving it empty uses the system production URL or deployment URL when system environment variables are exposed. Deployment environment variables take precedence over local environment files. A domain is not needed for local development or `npm run verify`.
 
 Generate sitemap/robots for the actual frontend domain before building:
 npm run sitemap -- https://YOUR-FRONTEND-DOMAIN

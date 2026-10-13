@@ -10,8 +10,9 @@ for (const file of ['.env', '.env.local', '.env.production', '.env.production.lo
   } catch { /* Optional environment files. */ }
 }
 Object.assign(env, process.env);
-const siteUrl = process.argv[2] || env.VITE_SITE_URL;
-if (!siteUrl) throw new Error('Provide the public React domain: npm run sitemap -- https://your-domain.example');
+const vercelHost = env.VERCEL_PROJECT_PRODUCTION_URL || env.VERCEL_URL;
+const siteUrl = process.argv[2] || env.VITE_SITE_URL?.trim() || (vercelHost ? 'https://' + vercelHost : '');
+if (!siteUrl) throw new Error('Set VITE_SITE_URL to the frontend HTTPS URL, or enable Vercel system environment variables. Locally: npm run sitemap -- https://your-domain.example');
 const base = new URL(siteUrl);
 if (base.protocol !== 'https:' || base.pathname !== '/' || base.search || base.hash || base.username || base.password) throw new Error('Use an HTTPS origin without a path or credentials.');
 const domain = env.VITE_SHOPIFY_STORE_DOMAIN?.replace(/^https?:\/\//, '').replace(/\/+$/, '');
