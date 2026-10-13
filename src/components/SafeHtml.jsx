@@ -18,7 +18,7 @@ function render(node, key) {
   if (!tags.has(tag)) return children;
   const props = { key };
   if (tag === 'a') { props.href = safeUrl(node.getAttribute('href') || ''); props.rel = 'noopener noreferrer'; }
-  if (tag === 'img') { props.src = safeUrl(node.getAttribute('src') || '', true); props.alt = node.getAttribute('alt') || ''; props.loading = 'lazy'; if (!props.src) return null; }
+  if (tag === 'img') { props.src = safeUrl(node.getAttribute('src') || '', true); props.alt = node.getAttribute('alt') || ''; props.loading = 'lazy'; if (/^https:\/\/cdn\.shopify\.com\//i.test(props.src || '')) props.crossOrigin = 'anonymous'; if (!props.src) return null; }
   if (tag === 'td' || tag === 'th') {
     const colspan = Number(node.getAttribute('colspan'));
     if (colspan > 0 && colspan <= 20) props.colSpan = colspan;

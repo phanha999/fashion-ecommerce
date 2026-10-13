@@ -4,5 +4,6 @@ export default function StoreImage({ src, alt = '', priority = false, maxWidth =
   const optimized = shopifyImageUrl(src, maxWidth);
   const widths = [240, 360, 480, 640, 960, 1440, 1920].filter(width => width <= maxWidth);
   const srcSet = optimized !== src ? widths.map(width => `${shopifyImageUrl(src, width)} ${width}w`).join(', ') : undefined;
-  return <img {...props} src={optimized} srcSet={srcSet} sizes={srcSet ? sizes : undefined} alt={alt} loading={priority ? 'eager' : loading || 'lazy'} fetchPriority={priority ? 'high' : fetchPriority} decoding="async" />;
+  const crossOrigin = /^https:\/\/cdn\.shopify\.com\//i.test(src || '') ? 'anonymous' : undefined;
+  return <img {...props} crossOrigin={crossOrigin} src={optimized} srcSet={srcSet} sizes={srcSet ? sizes : undefined} alt={alt} loading={priority ? 'eager' : loading || 'lazy'} fetchPriority={priority ? 'high' : fetchPriority} decoding="async" />;
 }
