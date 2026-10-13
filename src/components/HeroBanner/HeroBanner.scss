@@ -1,2 +1,2 @@
-.hero-slider { scrollbar-width: none; }
-.hero-slider::-webkit-scrollbar { display: none; }
+.hero-slider { touch-action: pan-y; }
+.hero-slider .swiper-wrapper { transition-timing-function: cubic-bezier(.22,.61,.36,1); }
