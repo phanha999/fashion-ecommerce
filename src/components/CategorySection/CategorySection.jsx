@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import BannerLink from '../BannerLink';
@@ -33,11 +34,11 @@ function CategorySection() {
       <div className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16">
         <div className="mb-10 text-center">
           <p className="mb-3 text-sm uppercase tracking-[0.3em] text-gray-500">
-            Explore
+            {t("Explore")}
           </p>
 
           <h2 className="text-3xl font-semibold md:text-4xl">
-            Shop By Category
+            {t("Shop By Category")}
           </h2>
         </div>
 

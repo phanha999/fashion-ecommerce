@@ -1,4 +1,5 @@
 import { shopifyFetch } from './client';
+import { getLocalizationCacheKey } from '../../utils/localization';
 const SHOP_SEARCH_QUERY = `
   query ShopSearch(
     $query: String!
@@ -167,7 +168,7 @@ async function loadResults(query, filters, sortKey, reverse, collection = '') {
   });
   const useCollection = Boolean(collection);
   const useCatalog = !useCollection && !query.trim() && otherFilters.length === 0;
-  const snapshotKey = JSON.stringify([collection, query, otherFilters, useCatalog || useCollection ? '' : sortKey, useCatalog || useCollection ? false : reverse]);
+  const snapshotKey = JSON.stringify([getLocalizationCacheKey(), collection, query, otherFilters, useCatalog || useCollection ? '' : sortKey, useCatalog || useCollection ? false : reverse]);
   let cached = snapshotCache.get(snapshotKey);
   if (!cached || cached.expiresAt <= Date.now()) {
     const promise = loadSnapshot(query, otherFilters, sortKey, reverse, collection, useCollection, useCatalog);
@@ -225,7 +226,7 @@ export async function searchProducts({
   query = '', filters = [], first = 24, after = null,
   sortKey = 'RELEVANCE', reverse = false, collection = '',
 } = {}) {
-  const cacheKey = JSON.stringify([collection, query, filters, sortKey, reverse]);
+  const cacheKey = JSON.stringify([getLocalizationCacheKey(), collection, query, filters, sortKey, reverse]);
   let resultPromise = resultsCache.get(cacheKey);
   // Refresh first-page requests; load-more uses the same product snapshot.
   if (!after || !resultPromise) {

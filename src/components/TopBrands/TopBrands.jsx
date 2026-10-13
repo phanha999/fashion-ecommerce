@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import { getBrands } from '../../services/shopify/contentService';
@@ -33,11 +34,11 @@ function TopBrands() {
 
         <div className="mb-10 text-left">
           <p className="text-sm uppercase tracking-[0.3em] text-gray-500">
-            Our Selection
+            {t("Our Selection")}
           </p>
 
           <h2 className="mt-3 text-3xl font-bold text-gray-900">
-            Top Brands
+            {t("Top Brands")}
           </h2>
         </div>
 

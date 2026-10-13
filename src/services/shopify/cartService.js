@@ -7,6 +7,7 @@ const lineFields = `id quantity cost { totalAmount { amount currencyCode } }
   } }`;
 const fields = `fragment CartFields on Cart {
   id checkoutUrl totalQuantity
+  buyerIdentity { countryCode }
   discountCodes { code applicable }
   cost { subtotalAmount { amount currencyCode } totalAmount { amount currencyCode } }
   lines(first: 250) { nodes { ${lineFields} } pageInfo { hasNextPage endCursor } }

@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ProductCard from "../ProductCard/ProductCard";
@@ -36,27 +37,27 @@ function BestSellers() {
     <section className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16">
       <div className="mb-10 flex items-end justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-gray-500">Popular picks</p>
+          <p className="text-sm uppercase tracking-[0.2em] text-gray-500">{t("Popular picks")}</p>
 
-          <h2 className="mt-2 text-3xl font-bold text-gray-900">Best Sellers</h2>
+          <h2 className="mt-2 text-3xl font-bold text-gray-900">{t("Best Sellers")}</h2>
         </div>
 
         <Link to="/shop" className="text-sm font-medium text-gray-900 underline underline-offset-4">
-          View all
+          {t("View all")}
         </Link>
       </div>
 
       {status === "loading" && (
-        <p className="py-10 text-center text-sm text-gray-500" role="status">Loading best sellers…</p>
+        <p className="py-10 text-center text-sm text-gray-500" role="status">{t("Loading best sellers…")}</p>
       )}
       {status === "error" && (
         <p className="py-10 text-center text-sm text-gray-500" role="status">
-          Best sellers are temporarily unavailable.
+          {t("Best sellers are temporarily unavailable.")}
         </p>
       )}
       {status === "success" && products.length === 0 && (
         <p className="py-10 text-center text-sm text-gray-500">
-          No best sellers are available right now.
+          {t("No best sellers are available right now.")}
         </p>
       )}
       {status === "success" && products.length > 0 && (

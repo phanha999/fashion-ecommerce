@@ -25,6 +25,9 @@ button:disabled { cursor: not-allowed; }
 input[type="checkbox"], input[type="radio"] { accent-color: #111827; }
 .header-action { position: relative; display: inline-flex; flex: 0 0 44px; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 50%; color: #111827; }
 .header-action:hover, .header-action[aria-expanded="true"] { background-color: #f3f4f6; }
+.locale-selector button[aria-pressed="true"] { background-color: #f3f4f6; color: #111827; }
+.locale-selector button svg { transition: transform 180ms ease; }
+.locale-panel { transform-origin: top right; }
 .header-count { position: absolute; top: 1px; right: 0; display: flex; min-width: 17px; height: 17px; align-items: center; justify-content: center; border: 2px solid white; border-radius: 999px; background: #111827; padding: 0 3px; color: white; font-size: 10px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; pointer-events: none; }
 .mega-menu > summary::-webkit-details-marker { display: none; }
 .mega-menu[open] .mega-chevron { transform: rotate(180deg); }

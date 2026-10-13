@@ -1,3 +1,5 @@
+import { getIntlLocale } from "../../utils/localization";
+import { t } from "../../utils/translations";
 import StoreImage from '../StoreImage';
 import { Link } from 'react-router-dom';
 import WishlistButton from '../WishlistButton';
@@ -34,11 +36,11 @@ function ProductCard({ product, imageRatio = 'portrait', priority = false }) {
       const variant = variants ? current.variants.find(item => item.id === selected) : available[0];
       if (!variant?.availableForSale) throw new Error('Choose an available option.');
       const cart = await addItem(variant.id, 1);
-      setFeedback({ message: cart.warnings?.length ? cart.warnings.map(item => item.message).join(' ') : 'Added to your cart.', success: true });
+      setFeedback({ message: cart.warnings?.length ? cart.warnings.map(item => item.message).join(' ') : t("Added to your cart."), success: true });
     } catch (error) { setFeedback({ message: error.message, success: false }); notify(error.message, 'error'); }
     finally { pending.current = false; setBusy(false); }
   }
-  const formattedPrice = new Intl.NumberFormat(undefined, {
+  const formattedPrice = new Intl.NumberFormat(getIntlLocale(), {
     style: 'currency',
     currency: product.currencyCode || 'USD',
   }).format(product.price);
@@ -53,7 +55,7 @@ function ProductCard({ product, imageRatio = 'portrait', priority = false }) {
   return (
     <div className="product-card relative">
       <WishlistButton productId={product.id} className="absolute right-3 top-3 z-10" />
-      <button type="button" onClick={add} aria-busy={busy} disabled={busy || cartLoading || isUpdating || product.availableForSale === false} aria-label={(busy ? 'Adding…' : product.availableForSale === false ? 'Sold out' : 'Add to cart') + ' — ' + product.name} title={product.availableForSale === false ? 'Sold out' : 'Add to cart'} className="absolute right-3 top-16 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-sm hover:scale-105 hover:border-gray-400 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">{feedback?.success ? <FiCheck size={19} aria-hidden="true" /> : <FiShoppingBag size={19} aria-hidden="true" />}{busy && <span className="sr-only">Adding…</span>}</button>
+      <button type="button" onClick={add} aria-busy={busy} disabled={busy || cartLoading || isUpdating || product.availableForSale === false} aria-label={(busy ? t("Adding…") : product.availableForSale === false ? t("Sold out") : t("Add to cart")) + ' — ' + product.name} title={product.availableForSale === false ? t("Sold out") : t("Add to cart")} className="absolute right-3 top-16 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-sm hover:scale-105 hover:border-gray-400 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">{feedback?.success ? <FiCheck size={19} aria-hidden="true" /> : <FiShoppingBag size={19} aria-hidden="true" />}{busy && <span className="sr-only">{t("Adding…")}</span>}</button>
       <Link to={`/products/${encodeURIComponent(product.handle || product.id)}`} className="group block overflow-hidden">
         <div className={`relative ${imageRatioClass} overflow-hidden rounded-md bg-gray-100`} style={imageStyle}>
           <StoreImage
@@ -66,7 +68,7 @@ function ProductCard({ product, imageRatio = 'portrait', priority = false }) {
           />
           {product.isNew && (
             <span className="absolute left-3 top-3 bg-black px-3 py-1 text-xs uppercase tracking-wider text-white">
-              New
+              {t("New")}
             </span>
           )}
         </div>
@@ -81,7 +83,7 @@ function ProductCard({ product, imageRatio = 'portrait', priority = false }) {
         </div>
       </Link>
       <div className="px-3">
-        {variants && <label className="dialog-enter mb-3 block text-xs text-gray-600">Choose an option for {product.name}<select aria-label={'Option for ' + product.name} value={selected} onChange={event => { setSelected(event.target.value); setFeedback(null); }} disabled={busy} className="mt-2 min-h-10 w-full rounded-md border border-gray-200 bg-white px-2 text-xs text-gray-900">{variants.map(variant => <option key={variant.id} value={variant.id} disabled={!variant.availableForSale}>{variant.title} — {new Intl.NumberFormat(undefined, { style: 'currency', currency: variant.price.currencyCode }).format(Number(variant.price.amount))}{!variant.availableForSale ? ' (Sold out)' : ''}</option>)}</select></label>}
+        {variants && <label className="dialog-enter mb-3 block text-xs text-gray-600">{t("Choose an option for")} {product.name}<select aria-label={'Option for ' + product.name} value={selected} onChange={event => { setSelected(event.target.value); setFeedback(null); }} disabled={busy} className="mt-2 min-h-10 w-full rounded-md border border-gray-200 bg-white px-2 text-xs text-gray-900">{variants.map(variant => <option key={variant.id} value={variant.id} disabled={!variant.availableForSale}>{variant.title} — {new Intl.NumberFormat(getIntlLocale(), { style: 'currency', currency: variant.price.currencyCode }).format(Number(variant.price.amount))}{!variant.availableForSale ? ' (Sold out)' : ''}</option>)}</select></label>}
 
         {feedback && <p role={feedback.success ? 'status' : 'alert'} className={'toast-enter mt-2 text-xs leading-5 ' + (feedback.success ? 'text-green-700' : 'text-red-700')}>{feedback.message}</p>}
       </div>

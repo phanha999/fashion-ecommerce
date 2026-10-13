@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import NewsletterForm from '../NewsletterForm';
@@ -81,7 +82,7 @@ function NewsletterSection() {
               </p>
             )}
 
-            <NewsletterForm label={banner.buttonLabel || 'Subscribe'} />
+            <NewsletterForm label={banner.buttonLabel || t("Subscribe")} />
           </div>
         </div>
       </div>

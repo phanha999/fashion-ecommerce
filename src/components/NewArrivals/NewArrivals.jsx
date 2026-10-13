@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import { useEffect, useState } from 'react';
 import ProductCard from '../ProductCard/ProductCard';
 import { getNewArrivalProducts } from '../../services/shopify/productService';
@@ -34,11 +35,11 @@ function NewArrivals() {
         <div className="mb-10 flex items-end justify-between">
           <div>
             <p className="mb-3 text-sm uppercase tracking-[0.3em] text-gray-500">
-              Latest
+              {t("Latest")}
             </p>
 
             <h2 className="text-3xl font-semibold md:text-4xl">
-              New Arrivals
+              {t("New Arrivals")}
             </h2>
           </div>
 
@@ -46,21 +47,21 @@ function NewArrivals() {
             href="/shop"
             className="hidden text-sm font-medium underline underline-offset-4 md:block"
           >
-            View All
+            {t("View All")}
           </a>
         </div>
 
         {status === 'loading' && (
-          <p className="py-10 text-center text-sm text-gray-500">Loading new arrivals…</p>
+          <p className="py-10 text-center text-sm text-gray-500">{t("Loading new arrivals…")}</p>
         )}
         {status === 'error' && (
           <p className="py-10 text-center text-sm text-gray-500" role="status">
-            New arrivals are temporarily unavailable.
+            {t("New arrivals are temporarily unavailable.")}
           </p>
         )}
         {status === 'success' && products.length === 0 && (
           <p className="py-10 text-center text-sm text-gray-500">
-            No new arrivals are available right now.
+            {t("No new arrivals are available right now.")}
           </p>
         )}
         {status === 'success' && products.length > 0 && (

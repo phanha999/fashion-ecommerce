@@ -1,8 +1,11 @@
+import { getIntlLocale } from "../../utils/localization";
+import { t } from "../../utils/translations";
 import Seo from '../../components/Seo';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import { searchProducts } from '../../services/shopify/productService';
+import { useLocalization } from '../../contexts/localizationContext';
 
 const PAGE_SIZE = 24;
 function readFilterParams(searchParams) {
@@ -16,10 +19,12 @@ function readFilterParams(searchParams) {
 }
 
 function formatMoney(amount, currencyCode = 'USD') {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode }).format(amount);
+  return new Intl.NumberFormat(getIntlLocale(), { style: 'currency', currency: currencyCode }).format(amount);
 }
 
 function Shop() {
+  const { data: localization } = useLocalization();
+  const currency = localization?.country.currency.isoCode || 'USD';
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchResults, setSearchResults] = useState({ products: [], filters: [], totalCount: 0, pageInfo: {} });
   const search = searchParams.get('q') || '';
@@ -126,7 +131,7 @@ function Shop() {
     const selection = {
       filterId: priceFilter.id,
       valueId: 'custom-price-range',
-      label: `${formatMoney(Number(priceDraftValues.min))} – ${formatMoney(Number(priceDraftValues.max))}`,
+      label: `${formatMoney(Number(priceDraftValues.min), currency)} – ${formatMoney(Number(priceDraftValues.max), currency)}`,
       input: { price: { min: Number(priceDraftValues.min), max: Number(priceDraftValues.max) } },
     };
     updateSelectedFilters([...activeFilters.filter((item) => item.filterId !== priceFilter.id), selection]);
@@ -177,8 +182,8 @@ function Shop() {
   const filterSidebar = (
     <aside className="w-full shrink-0 lg:w-[280px]" aria-label="Product filters">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-2xl font-medium">Filters</h2>
-        <button type="button" onClick={clearAllFilters} className="text-xs text-gray-600 underline-offset-4 hover:underline">Clear all</button>
+        <h2 className="text-2xl font-medium">{t("Filters")}</h2>
+        <button type="button" onClick={clearAllFilters} className="text-xs text-gray-600 underline-offset-4 hover:underline">{t("Clear all")}</button>
       </div>
 
       {activeFilters.length > 0 && (
@@ -198,17 +203,17 @@ function Shop() {
             <div>
               <div className="flex items-center gap-2">
                 <label className="min-w-0 flex-1">
-                  <span className="sr-only">Minimum price</span>
+                  <span className="sr-only">{t("Minimum price")}</span>
                   <input type="number" min={priceBounds.min} max={priceDraftValues.max || priceBounds.max} value={priceDraftValues.min} onChange={(event) => setPriceDraft((draft) => ({ ...(draft || priceDraftValues), min: event.target.value }))} className="w-full rounded border border-gray-300 px-2 py-2 text-sm" />
                 </label>
                 <span className="text-gray-500">–</span>
                 <label className="min-w-0 flex-1">
-                  <span className="sr-only">Maximum price</span>
+                  <span className="sr-only">{t("Maximum price")}</span>
                   <input type="number" min={priceDraftValues.min || priceBounds.min} max={priceBounds.max} value={priceDraftValues.max} onChange={(event) => setPriceDraft((draft) => ({ ...(draft || priceDraftValues), max: event.target.value }))} className="w-full rounded border border-gray-300 px-2 py-2 text-sm" />
                 </label>
               </div>
-              <p className="mt-2 text-xs text-gray-500">Price range: {formatMoney(priceBounds.min)} – {formatMoney(priceBounds.max)}</p>
-              <button type="button" onClick={applyPrice} disabled={!priceDraftValues.min || !priceDraftValues.max} className="mt-3 border border-black px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40">Apply price</button>
+              <p className="mt-2 text-xs text-gray-500">{t("Price range:")} {formatMoney(priceBounds.min, currency)} – {formatMoney(priceBounds.max, currency)}</p>
+              <button type="button" onClick={applyPrice} disabled={!priceDraftValues.min || !priceDraftValues.max} className="mt-3 border border-black px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40">{t("Apply price")}</button>
             </div>
           ) : filter.values.length > 0 ? (
             <div className="flex flex-col gap-4">
@@ -223,7 +228,7 @@ function Shop() {
                 );
               })}
             </div>
-          ) : <p className="text-xs text-gray-500">No available values.</p>}
+          ) : <p className="text-xs text-gray-500">{t("No available values.")}</p>}
         </section>
       ))}
     </aside>
@@ -234,55 +239,55 @@ function Shop() {
 
   return (
     <section className="mx-auto max-w-[1920px] px-4 pb-16 pt-8 sm:px-6 lg:px-10 2xl:px-16">
-      <Seo title="Shop all" description="Explore products and collections." />
-      <nav aria-label="Breadcrumb" className="mb-8 text-xs text-gray-500"><span>Home</span><span className="mx-2">/</span><span className="text-gray-900">Search</span></nav>
+      <Seo title={t("Shop all")} description="Explore products and collections." />
+      <nav aria-label="Breadcrumb" className="mb-8 text-xs text-gray-500"><span>{t("Home")}</span><span className="mx-2">/</span><span className="text-gray-900">{t("Search")}</span></nav>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
         <div className="hidden lg:block">{filterSidebar}</div>
         <div aria-hidden={!filtersOpen} inert={!filtersOpen} className={"filter-panel lg:hidden " + (filtersOpen ? "filter-panel-open" : "")}><div className="min-h-0 overflow-hidden">{filterSidebar}</div></div>
 
-        <section className="min-w-0" aria-label="Products">
+        <section className="min-w-0" aria-label={t("Products")}>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-2xl font-semibold">{collection ? collection.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') : 'Shop all'}</h1>
+            <h1 className="text-2xl font-semibold">{collection ? collection.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') : t("Shop all")}</h1>
             <div className="flex items-center gap-4">
-              <p className="text-xs text-gray-500" aria-live="polite">{totalCount.toLocaleString()} items</p>
+              <p className="text-xs text-gray-500" aria-live="polite">{totalCount.toLocaleString()} {t("items")}</p>
               <label className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm">
-                <span className="sr-only">Sort products</span>
+                <span className="sr-only">{t("Sort products")}</span>
                 <select value={sort} onChange={(event) => setSort(event.target.value)} className="max-w-40 bg-transparent outline-none">
-                  <option value="title-ascending">Alphabetically, A-Z</option>
-                  <option value="price-low">Price: low to high</option>
-                  <option value="price-high">Price: high to low</option>
+                  <option value="title-ascending">{t("Alphabetically, A-Z")}</option>
+                  <option value="price-low">{t("Price: low to high")}</option>
+                  <option value="price-high">{t("Price: high to low")}</option>
                 </select>
               </label>
             </div>
           </div>
 
           <div className="mb-6 flex gap-3 lg:hidden">
-            <button type="button" onClick={() => setFiltersOpen((open) => !open)} className="border border-gray-300 px-4 py-2 text-sm">{filtersOpen ? 'Hide filters' : `Filters${activeFilters.length ? ` (${activeFilters.length})` : ''}`}</button>
+            <button type="button" onClick={() => setFiltersOpen((open) => !open)} className="border border-gray-300 px-4 py-2 text-sm">{filtersOpen ? t("Hide filters") : `${t('Filters')}${activeFilters.length ? ` (${activeFilters.length})` : ''}`}</button>
             <label className="min-w-0 flex-1 border-b border-gray-300 py-2">
-              <span className="sr-only">Search products</span>
-              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products" className="w-full bg-transparent text-sm outline-none" />
+              <span className="sr-only">{t("Search products")}</span>
+              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("Search products")} className="w-full bg-transparent text-sm outline-none" />
             </label>
           </div>
           <label className="mb-6 hidden border-b border-gray-300 py-2 lg:block">
-            <span className="sr-only">Search products</span>
-            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products" className="w-full bg-transparent text-sm outline-none" />
+            <span className="sr-only">{t("Search products")}</span>
+            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("Search products")} className="w-full bg-transparent text-sm outline-none" />
           </label>
 
           {status === 'loading' && <div aria-label="Loading products and Shopify filters" aria-busy="true" className="grid min-h-screen grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{Array.from({length: 12}, (_, index) => <div key={index}><div className="aspect-[3/4] animate-pulse rounded-md bg-gray-100" /><div className="mt-4 h-4 w-3/4 animate-pulse bg-gray-100" /><div className="mt-3 h-4 w-1/3 animate-pulse bg-gray-100" /></div>)}</div>}
-          <p className="mb-4 min-h-4 text-xs text-gray-500" aria-live="polite">{status === 'updating' ? 'Updating results…' : ''}</p>
+          <p className="mb-4 min-h-4 text-xs text-gray-500" aria-live="polite">{status === 'updating' ? t("Updating results…") : ''}</p>
           {error && status !== 'error' && <p role="alert" className="mb-4 text-sm text-red-700">{error}</p>}
-          {status === 'error' && <div className="py-20 text-center" role="alert"><h2 className="text-lg font-medium">Could not load Shopify results</h2><p className="mt-2 text-sm text-gray-500">{error}</p></div>}
+          {status === 'error' && <div className="py-20 text-center" role="alert"><h2 className="text-lg font-medium">{t("Could not load Shopify results")}</h2><p className="mt-2 text-sm text-gray-500">{error}</p></div>}
           {status !== 'loading' && status !== 'error' && visibleProducts.length > 0 && (
             <>
               <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-[30px] xl:grid-cols-4 2xl:grid-cols-5">
                 {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} imageRatio="natural" priority={index < 2} />)}
               </div>
-              {searchResults.pageInfo.hasNextPage && <div className="mt-12 flex justify-center"><button type="button" onClick={loadMore} disabled={loadingMore} className="border border-black px-6 py-3 text-xs uppercase tracking-wider disabled:opacity-50">{loadingMore ? 'Loading…' : 'Load more'}</button></div>}
+              {searchResults.pageInfo.hasNextPage && <div className="mt-12 flex justify-center"><button type="button" onClick={loadMore} disabled={loadingMore} className="border border-black px-6 py-3 text-xs uppercase tracking-wider disabled:opacity-50">{loadingMore ? t("Loading…") : t("Load more")}</button></div>}
             </>
           )}
           {status !== 'loading' && status !== 'error' && visibleProducts.length === 0 && (
-            <div className="py-20 text-center"><h2 className="text-lg font-medium">No products found</h2><p className="mt-2 text-sm text-gray-500">Try changing your search or filters.</p><button type="button" onClick={clearAllFilters} className="mt-5 border border-black px-5 py-3 text-xs uppercase tracking-wider hover:bg-black hover:text-white">Clear filters</button></div>
+            <div className="py-20 text-center"><h2 className="text-lg font-medium">{t("No products found")}</h2><p className="mt-2 text-sm text-gray-500">{t("Try changing your search or filters.")}</p><button type="button" onClick={clearAllFilters} className="mt-5 border border-black px-5 py-3 text-xs uppercase tracking-wider hover:bg-black hover:text-white">{t("Clear filters")}</button></div>
           )}
         </section>
       </div>

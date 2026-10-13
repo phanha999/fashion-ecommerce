@@ -1,7 +1,8 @@
 // Keep Shopify-managed navigation inside the React storefront when a route exists.
-export function storefrontLink(value, storeDomains = []) {
+export function storefrontLink(value, storeDomains = [], languageCodes = []) {
   if (typeof value !== 'string' || !value.trim()) return null;
   const link = value.trim();
+  if (link.startsWith('#')) return link;
   if (/^(mailto:|tel:)/i.test(link)) return link;
   let url;
   try { url = new URL(link, 'https://react-storefront.invalid'); } catch { return null; }
@@ -10,6 +11,12 @@ export function storefrontLink(value, storeDomains = []) {
     try { return new URL(domain.startsWith('http') ? domain : 'https://' + domain).hostname === url.hostname; } catch { return false; }
   });
   if (!internal) return url.href;
+  // Shopify localizes hosted URLs (/fr/collections/...), while React keeps
+  // its existing routes and reads the chosen language from storefront context.
+  const segment = url.pathname.split('/')[1].toLowerCase();
+  if (languageCodes.some(code => code.toLowerCase().replace('_', '-') === segment)) {
+    url.pathname = url.pathname.slice(segment.length + 1) || '/';
+  }
   const product = url.pathname.match(/^\/collections\/[^/]+\/products\/([^/]+)\/?$/);
   const collection = url.pathname.match(/^\/collections\/([^/]+)\/?$/);
   if (product) url.pathname = '/products/' + product[1];

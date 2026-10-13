@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../../hooks/useWishlist';
@@ -19,5 +20,5 @@ export default function Wishlist() {
     })).then(items => { if (!cancelled) setResult({ key, items }); });
     return () => { cancelled = true; };
   }, [key]);
-  return <section className="mx-auto max-w-7xl px-4 py-12"><Seo title="Your wishlist" noIndex /><h1 className="mb-8 text-3xl font-bold">Your wishlist</h1><p className="mb-6 text-sm text-gray-500">Saved on this browser.</p>{!ids.length ? <p>No saved products yet. <Link to="/shop" className="underline">Explore the shop</Link></p> : result?.key !== key ? <p>Loading wishlist…</p> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{result.items.map(item => item.unavailable ? <div key={item.id} className="border p-6"><p>Product temporarily unavailable.</p><button onClick={() => toggle(item.id)} className="mt-3 underline">Remove</button></div> : <ProductCard key={item.id} product={item.product} />)}</div>}</section>;
+  return <section className="mx-auto max-w-7xl px-4 py-12"><Seo title={t("Your wishlist")} noIndex /><h1 className="mb-8 text-3xl font-bold">{t("Your wishlist")}</h1><p className="mb-6 text-sm text-gray-500">Saved on this browser.</p>{!ids.length ? <p>{t("No saved products yet.")} <Link to="/shop" className="underline">{t("Explore the shop")}</Link></p> : result?.key !== key ? <p>{t("Loading wishlist…")}</p> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{result.items.map(item => item.unavailable ? <div key={item.id} className="border p-6"><p>{t("Product temporarily unavailable.")}</p><button onClick={() => toggle(item.id)} className="mt-3 underline">{t("Remove")}</button></div> : <ProductCard key={item.id} product={item.product} />)}</div>}</section>;
 }

@@ -1,4 +1,6 @@
+import { t } from "../../utils/translations";
 import StoreImage from '../StoreImage';
+import { getIntlLocale } from '../../utils/localization';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BannerLink from '../BannerLink';
@@ -32,7 +34,7 @@ function ProductItem({ product }) {
         )}
 
         <p className="mt-2 text-sm text-gray-500">
-          ${product.price}
+          {new Intl.NumberFormat(getIntlLocale(), { style: 'currency', currency: product.currencyCode }).format(product.price)}
         </p>
       </div>
     </Link>
@@ -94,11 +96,11 @@ function FeaturedProducts() {
 
       <div className="mb-10">
         <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
-          Featured Collection
+          {t("Featured Collection")}
         </p>
 
         <h2 className="mt-2 text-3xl font-bold text-gray-900">
-          Discover Our Products
+          {t("Discover Our Products")}
         </h2>
       </div>
 
@@ -152,16 +154,16 @@ function FeaturedProducts() {
         )}
 
         {status === 'loading' && (
-          <p className="py-10 text-center text-sm text-gray-500">Loading new arrivals…</p>
+          <p className="py-10 text-center text-sm text-gray-500">{t("Loading new arrivals…")}</p>
         )}
         {status === 'error' && (
           <p className="py-10 text-center text-sm text-gray-500" role="status">
-            New arrivals are temporarily unavailable.
+            {t("New arrivals are temporarily unavailable.")}
           </p>
         )}
         {status === 'success' && products.length === 0 && (
           <p className="py-10 text-center text-sm text-gray-500">
-            No new arrivals are available right now.
+            {t("No new arrivals are available right now.")}
           </p>
         )}
         {status === 'success' && products.length > 0 && (

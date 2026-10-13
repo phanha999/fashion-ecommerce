@@ -1,4 +1,5 @@
 import BannerLink from '../BannerLink';
+import { t } from '../../utils/translations';
 import { useSite } from '../../contexts/siteContext';
 import StoreImage from '../StoreImage';
 function Footer() {
@@ -8,7 +9,7 @@ function Footer() {
       <div><h2 className="font-semibold">{site?.logo?.url ? <StoreImage src={site.logo.url} alt={site.logo.altText || site.name} width={site.logo.width} height={site.logo.height} maxWidth={240} sizes="114px" className="h-auto w-[114px] object-contain" /> : site?.name || 'Our store'}</h2><p className="mt-4 text-sm leading-6 text-gray-500">{site?.description || 'Explore our collections and find your next favourite.'}</p>{site?.contactEmail && <a href={'mailto:' + site.contactEmail} className="mt-4 block break-all text-sm underline">{site.contactEmail}</a>}</div>
       {site?.footerMenu && <nav aria-label="Footer navigation" className="sm:col-span-1 lg:col-span-4"><h2 className="font-semibold">{site.footerMenu.title}</h2><MenuLinks items={site.footerMenu.items} /></nav>}
     </div>
-    <p className="border-t border-gray-200 px-4 py-6 text-center text-xs text-gray-500">© {new Date().getFullYear()} {site?.name || 'Our store'}. All rights reserved.</p>
+    <p className="border-t border-gray-200 px-4 py-6 text-center text-xs text-gray-500">© {new Date().getFullYear()} {site?.name || 'Our store'}.{' '}{t('All rights reserved.')}</p>
   </footer>;
 }
 export default Footer;

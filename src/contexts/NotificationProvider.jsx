@@ -1,3 +1,4 @@
+import { t } from '../utils/translations';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiCheckCircle, FiAlertCircle, FiInfo, FiX } from 'react-icons/fi';
@@ -19,7 +20,7 @@ function Toast({ toast, dismiss }) {
   const color = toast.type === 'success' ? 'text-green-700' : toast.type === 'error' ? 'text-red-700' : toast.type === 'warning' ? 'text-amber-700' : 'text-gray-700';
   return <div ref={ref} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }} className="toast-enter pointer-events-auto flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-lg">
     <Icon className={'mt-0.5 shrink-0 ' + color} size={20} aria-hidden="true" />
-    <div className="min-w-0 flex-1"><p className="text-sm leading-6 text-gray-900">{toast.message}</p>{toast.to && <Link to={toast.to} onClick={close} className="mt-1 inline-block text-sm font-medium underline underline-offset-4">{toast.label || 'View'}</Link>}</div>
+    <div className="min-w-0 flex-1"><p className="text-sm leading-6 text-gray-900">{t(toast.message)}</p>{toast.to && <Link to={toast.to} onClick={close} className="mt-1 inline-block text-sm font-medium underline underline-offset-4">{t(toast.label || 'View')}</Link>}</div>
     <button type="button" onClick={close} aria-label="Dismiss notification" className="-m-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"><FiX size={17} /></button>
   </div>;
 }

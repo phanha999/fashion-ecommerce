@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -38,10 +39,10 @@ function BlogSection() {
     <section className="mx-auto max-w-[1920px] px-4 md:px-8 2xl:px-16">
       <div className="mb-10 text-center">
         <p className="text-sm uppercase tracking-[0.25em] text-gray-500">
-          From Our Blog
+          {t("From Our Blog")}
         </p>
         <h2 className="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">
-          Latest Articles
+          {t("Latest Articles")}
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-gray-600">
           Discover fashion tips, styling inspiration, and the latest trends from Velora.
@@ -100,7 +101,7 @@ function BlogSection() {
                         {article.description}
                       </p>
                       <span className="mt-4 inline-block text-sm font-medium text-gray-900 underline underline-offset-4">
-                        Read More
+                        {t("Read More")}
                       </span>
                     </div>
                   </Link>

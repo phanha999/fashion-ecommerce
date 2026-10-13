@@ -1,3 +1,4 @@
+import { t } from "./utils/translations";
 import { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -36,7 +37,7 @@ function preloadLink(event) {
   const url = new URL(link.href, window.location.href);
   if (url.origin !== window.location.origin) return;
   const path = url.pathname;
-  const name = path === '/' ? 'Home' : path === '/shop' ? 'Shop' : path.startsWith('/products/') ? 'ProductDetail' : path === '/cart' ? 'Cart' : path === '/account' ? 'Account' : path === '/wishlist' ? 'Wishlist' : path === '/blogs' ? 'Blog' : path.startsWith('/blogs/') ? 'BlogArticle' : path === '/pages/contact' ? 'Contact' : path.startsWith('/pages/') || path.startsWith('/policies/') ? 'ContentPage' : null;
+  const name = path === '/' ? t("Home") : path === '/shop' ? 'Shop' : path.startsWith('/products/') ? 'ProductDetail' : path === '/cart' ? 'Cart' : path === '/account' ? 'Account' : path === '/wishlist' ? t("Wishlist") : path === '/blogs' ? 'Blog' : path.startsWith('/blogs/') ? 'BlogArticle' : path === '/pages/contact' ? t("Contact") : path.startsWith('/pages/') || path.startsWith('/policies/') ? 'ContentPage' : null;
   if (!name || warmedPages.has(name)) return;
   warmedPages.add(name);
   pageLoaders[name]().catch(() => warmedPages.delete(name));

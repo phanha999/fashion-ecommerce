@@ -1,3 +1,5 @@
+import { contextualizeQuery } from '../../utils/localization';
+
 const storeDomain = (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || '')
   .trim()
   .replace(/^https?:\/\//, '')
@@ -5,7 +7,8 @@ const storeDomain = (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || '')
 const storefrontToken = (import.meta.env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN || '').trim();
 const apiVersion = (import.meta.env.VITE_SHOPIFY_API_VERSION || '2026-07').trim();
 
-export async function shopifyFetch(query, variables = {}) {
+export async function shopifyFetch(query, variables = {}, context) {
+  query = contextualizeQuery(query, context);
   if (!storeDomain || !storefrontToken) {
     throw new Error('Shopify config is missing. Check .env.local.');
   }

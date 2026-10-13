@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import { useSite } from '../../contexts/siteContext';
 import Seo from '../../components/Seo';
 import { useState } from 'react';
@@ -67,7 +68,7 @@ export default function Account() {
 
   return (
     <section className="mx-auto max-w-[1920px] px-4 py-16 md:px-8 md:py-24">
-      <Seo title="Your account" description="" noIndex />
+      <Seo title={t("Your account")} description="" noIndex />
       <div className="mx-auto max-w-3xl border border-gray-200 p-6 sm:p-10">
         <p className="text-sm uppercase tracking-[0.25em] text-gray-500">Your {site?.name || 'store'} account</p>
         {(error || formError) && <p role="alert" className="mt-5 border border-red-200 bg-red-50 p-4 text-sm text-red-800">{formError || error}</p>}
@@ -76,38 +77,38 @@ export default function Account() {
           <div className="mt-6 h-72 animate-pulse bg-gray-100" aria-label="Loading account" />
         ) : customer ? (
           <>
-            <h1 className="mt-4 text-3xl font-bold">Hello, {customer.firstName || customer.displayName || 'there'}</h1>
+            <h1 className="mt-4 text-3xl font-bold">{t("Hello,")} {customer.firstName || customer.displayName || 'there'}</h1>
             <dl className="mt-6 space-y-4 text-sm">
-              <div><dt className="text-gray-500">Name</dt><dd>{customer.displayName}</dd></div>
-              <div><dt className="text-gray-500">Email</dt><dd>{customer.email}</dd></div>
-              {customer.phone && <div><dt className="text-gray-500">Phone</dt><dd>{customer.phone}</dd></div>}
+              <div><dt className="text-gray-500">{t("Name")}</dt><dd>{customer.displayName}</dd></div>
+              <div><dt className="text-gray-500">{t("Email")}</dt><dd>{customer.email}</dd></div>
+              {customer.phone && <div><dt className="text-gray-500">{t("Phone")}</dt><dd>{customer.phone}</dd></div>}
             </dl>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <button type="button" onClick={logout} disabled={pending} className={buttonClass}>{isSigningOut ? 'Signing out…' : 'Sign out'}</button>
-              <Link to="/shop" className="text-sm underline">Continue shopping</Link>
+              <button type="button" onClick={logout} disabled={pending} className={buttonClass}>{isSigningOut ? t("Signing out…") : t("Sign out")}</button>
+              <Link to="/shop" className="text-sm underline">{t("Continue shopping")}</Link>
             </div>
             {customer && <AccountDashboard />}
           </>
         ) : (
           <>
-            <h1 className="mt-4 text-3xl font-bold">{mode === 'register' ? 'Create an account' : mode === 'recover' ? 'Reset your password' : 'Sign in'}</h1>
-            <p className="mt-3 text-sm text-gray-600">{mode === 'recover' ? 'Enter your email to receive password reset instructions.' : 'Use your email and password to access your account.'}</p>
+            <h1 className="mt-4 text-3xl font-bold">{mode === 'register' ? t("Create an account") : mode === 'recover' ? t("Reset your password") : t("Sign in")}</h1>
+            <p className="mt-3 text-sm text-gray-600">{mode === 'recover' ? t("Enter your email to receive password reset instructions.") : t("Use your email and password to access your account.")}</p>
             {configError && <p role="alert" className="mt-4 bg-amber-50 p-4 text-sm text-amber-900">{configError}</p>}
             <form key={mode} onSubmit={submit} className="mt-6 space-y-5">
               {mode === 'register' && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="text-sm">First name<input name="firstName" autoComplete="given-name" required disabled={pending} className={inputClass} /></label>
-                  <label className="text-sm">Last name<input name="lastName" autoComplete="family-name" required disabled={pending} className={inputClass} /></label>
+                  <label className="text-sm">{t("First name")}<input name="firstName" autoComplete="given-name" required disabled={pending} className={inputClass} /></label>
+                  <label className="text-sm">{t("Last name")}<input name="lastName" autoComplete="family-name" required disabled={pending} className={inputClass} /></label>
                 </div>
               )}
-              <label className="block text-sm">Email<input name="email" type="email" autoComplete="email" required disabled={pending} className={inputClass} /></label>
-              {mode !== 'recover' && <label className="block text-sm">Password<input name="password" type="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} minLength={mode === 'register' ? 5 : undefined} required disabled={pending} className={inputClass} /></label>}
-              {mode === 'register' && <label className="block text-sm">Confirm password<input name="confirmPassword" type="password" autoComplete="new-password" required disabled={pending} className={inputClass} /></label>}
-              <button type="submit" disabled={pending || Boolean(configError)} className={buttonClass + ' w-full'}>{pending ? 'Please wait…' : mode === 'register' ? 'Create account' : mode === 'recover' ? 'Send reset email' : 'Sign in'}</button>
+              <label className="block text-sm">{t("Email")}<input name="email" type="email" autoComplete="email" required disabled={pending} className={inputClass} /></label>
+              {mode !== 'recover' && <label className="block text-sm">{t("Password")}<input name="password" type="password" autoComplete={mode === 'register' ? 'new-password' : 'current-password'} minLength={mode === 'register' ? 5 : undefined} required disabled={pending} className={inputClass} /></label>}
+              {mode === 'register' && <label className="block text-sm">{t("Confirm password")}<input name="confirmPassword" type="password" autoComplete="new-password" required disabled={pending} className={inputClass} /></label>}
+              <button type="submit" disabled={pending || Boolean(configError)} className={buttonClass + ' w-full'}>{pending ? t("Please wait…") : mode === 'register' ? t("Create account") : mode === 'recover' ? t("Send reset email") : t("Sign in")}</button>
             </form>
             <div className="mt-6 flex flex-wrap justify-center gap-5 text-sm">
-              {mode !== 'login' && <button type="button" disabled={pending} onClick={() => switchMode('login')} className="underline">Back to sign in</button>}
-              {mode === 'login' && <><button type="button" disabled={pending} onClick={() => switchMode('register')} className="underline">Create an account</button><button type="button" disabled={pending} onClick={() => switchMode('recover')} className="underline">Forgot password?</button></>}
+              {mode !== 'login' && <button type="button" disabled={pending} onClick={() => switchMode('login')} className="underline">{t("Back to sign in")}</button>}
+              {mode === 'login' && <><button type="button" disabled={pending} onClick={() => switchMode('register')} className="underline">{t("Create an account")}</button><button type="button" disabled={pending} onClick={() => switchMode('recover')} className="underline">{t("Forgot password?")}</button></>}
             </div>
             {customer && <AccountDashboard />}
           </>

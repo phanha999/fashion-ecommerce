@@ -61,6 +61,16 @@ Legacy customer accounts must be enabled.
 Orders, addresses and profile actions authenticate using the current customer's token. Checkout always refreshes the cart and attaches or detaches the customer's buyer identity immediately before redirecting.
 Account sessions are per browser tab. Wishlist is local to this browser, not synced across devices.
 
+## Countries, currencies and languages
+
+The header selectors read active countries, their configured currencies and published languages from Shopify Storefront `localization`. Manage countries/prices in **Shopify Admin → Markets**, and publish languages/translations in **Settings → Languages / Translate & Adapt**. Countries sharing EUR still remain separate choices because catalog pricing and checkout depend on country.
+
+Selection is remembered in this browser and synchronizes between tabs. Product/search/content reads use `@inContext(country, language)`; cart creation, restoration and checkout synchronize `buyerIdentity.countryCode`. Checkout receives the chosen language. No frontend exchange-rate conversion is used: Shopify supplies the market's actual price and currency. A shipping address at checkout can cause Shopify to recalculate for the delivery country.
+
+React interface labels for English, German, French, Italian and Japanese are in `src/utils/translations.js`. Shopify product descriptions, navigation, pages, policies and metaobjects use their published translations; missing translations fall back to Shopify's original content. New UI languages require adding their React translations too. Edit business contact details in the dedicated `custom.support_email`, `custom.support_phone` and `custom.support_address` shop metafields rather than relying on extraction from translated page text.
+
+Changing language/country refreshes loaded storefront data while preserving the current route, customer session, wishlist and cart. If the Shopify request fails, the previous selection stays active and the selector shows an error.
+
 ## Before accepting live orders
 
 These checks require Shopify Admin / a customer and cannot be certified from frontend code alone:

@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import BannerLink from '../BannerLink';
@@ -37,7 +38,7 @@ function GridBanner() {
         </p>
 
         <h2 className="mt-2 text-3xl font-bold text-gray-900">
-          Shop By Collection
+          {t("Shop By Collection")}
         </h2>
       </div>
 
@@ -96,7 +97,7 @@ function GridBanner() {
                   </p>
 
                   <span className="mt-4 inline-block text-sm font-medium underline underline-offset-4">
-                    Shop now
+                    {t("Shop now")}
                   </span>
                 </div>
               </BannerLink>

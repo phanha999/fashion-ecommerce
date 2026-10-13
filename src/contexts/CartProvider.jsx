@@ -1,13 +1,18 @@
+import { t } from "../utils/translations";
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CartContext } from './cartContext';
 import { addCartLine, getCart, removeCartLine, updateCartLine, updateCartBuyer, updateCartDiscounts } from '../services/shopify/cartService';
 import { readStoredSession } from '../services/shopify/accountService';
 import { useCustomerAccount } from './customerAccountContext';
 import { useNotifications } from './notificationContext';
+import { useLocalization } from './localizationContext';
+import { getLocalizationContext, getIntlLocale } from '../utils/localization';
 
 const key = 'velora_shopify_cart_id';
 export default function CartProvider({ children }) {
   const { notify } = useNotifications();
+  const { data: localization } = useLocalization();
+  const country = localization?.country.isoCode;
   const { customer, isLoading: accountLoading } = useCustomerAccount();
   const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,14 +41,17 @@ export default function CartProvider({ children }) {
   const restore = useCallback(async () => {
     let id;
     try { id = localStorage.getItem(key); } catch { id = current.current?.id; }
-    const next = id ? await getCart(id) : null;
+    let next = id ? await getCart(id) : null;
+    const selectedCountry = getLocalizationContext().country;
+    if (next && selectedCountry && next.buyerIdentity?.countryCode !== selectedCountry) next = await updateCartBuyer(next.id, { countryCode: selectedCountry });
     save(next);
     return next;
   }, [save]);
   const refresh = useCallback(() => enqueue(restore), [enqueue, restore]);
   const identity = useCallback(() => {
     const session = readStoredSession();
-    return session ? { customerAccessToken: session.accessToken, email: profile.current?.email || null } : { customerAccessToken: null, email: null, phone: null };
+    const countryCode = getLocalizationContext().country;
+    return { ...(countryCode ? { countryCode } : {}), ...(session ? { customerAccessToken: session.accessToken, email: profile.current?.email || null } : { customerAccessToken: null, email: null, phone: null }) };
   }, []);
   useEffect(() => {
     refresh().catch(() => {});
@@ -59,7 +67,7 @@ export default function CartProvider({ children }) {
       const existing = current.current;
       if (existing) save(await updateCartBuyer(existing.id, identity()));
     }).catch(() => {});
-  }, [customer, accountLoading, enqueue, save, identity]);
+  }, [customer, accountLoading, country, enqueue, save, identity]);
 
   function mutate(operation, message, action) {
     return enqueue(async () => {
@@ -80,16 +88,25 @@ export default function CartProvider({ children }) {
   return (
     <CartContext.Provider value={{
       cart, isLoading, isUpdating, error, refresh,
-      addItem: (variantId, quantity = 1) => mutate(existing => addCartLine(existing?.id, variantId, quantity, identity()), 'Added to your cart.', { to: '/cart', label: 'View cart' }),
-      updateItem: (id, quantity) => mutate(existing => { if (!existing) throw new Error('Your cart expired. Please add your products again.'); return updateCartLine(existing.id, id, quantity); }, 'Cart quantity updated.'),
-      removeItem: id => mutate(existing => { if (!existing) return null; return removeCartLine(existing.id, id); }, 'Item removed from your cart.'),
+      changeCountry: countryCode => enqueue(async () => {
+        const existing = await restore();
+        if (existing) {
+          const next = await updateCartBuyer(existing.id, { ...identity(), countryCode });
+          save(next);
+          if (next.warnings?.length) notify(next.warnings.map(item => item.message).join(' '), 'warning');
+        }
+      }),
+      addItem: (variantId, quantity = 1) => mutate(existing => addCartLine(existing?.id, variantId, quantity, identity()), t("Added to your cart."), { to: '/cart', label: t("View cart") }),
+      updateItem: (id, quantity) => mutate(existing => { if (!existing) throw new Error('Your cart expired. Please add your products again.'); return updateCartLine(existing.id, id, quantity); }, t("Cart quantity updated.")),
+      removeItem: id => mutate(existing => { if (!existing) return null; return removeCartLine(existing.id, id); }, t("Item removed from your cart.")),
       setDiscounts: codes => mutate(existing => { if (!existing) throw new Error('Add a product before applying a discount.'); return updateCartDiscounts(existing.id, codes); }, next => next.discountCodes?.some(code => !code.applicable) ? { message: 'This discount does not apply to your cart.', type: 'warning' } : { message: codes.length ? 'Discount codes updated.' : 'Discount code removed.', type: 'success' }),
       checkout: () => mutate(async existing => {
         if (!existing?.totalQuantity) throw new Error('Your cart is empty. Please add a product first.');
-        notify('Opening secure Shopify checkout…', 'info');
+        notify(t("Opening secure Shopify checkout…"), 'info');
         const next = await updateCartBuyer(existing.id, identity());
         if (!next.totalQuantity) throw new Error('Your products are no longer available.');
         const url = new URL(next.checkoutUrl);
+        url.searchParams.set('locale', getIntlLocale());
         if (url.protocol !== 'https:') throw new Error('Checkout is temporarily unavailable.');
         window.location.assign(url.toString());
         return next;

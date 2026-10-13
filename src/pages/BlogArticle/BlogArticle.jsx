@@ -1,3 +1,5 @@
+import { getIntlLocale } from "../../utils/localization";
+import { t } from "../../utils/translations";
 import StoreImage from '../../components/StoreImage';
 import Seo from '../../components/Seo';
 import SafeHtml from '../../components/SafeHtml';
@@ -33,9 +35,9 @@ function BlogArticle() {
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-16 md:px-8">
-      <Seo title={article?.title || 'Journal'} description={article?.description || ''} image={article?.image} />
+      <Seo title={article?.title || t("Journal")} description={article?.description || ''} image={article?.image} />
       <Link to="/blogs" className="text-sm text-gray-600 underline underline-offset-4">
-        Back to journal
+        {t("Back to journal")}
       </Link>
 
       {isLoading ? (
@@ -43,7 +45,7 @@ function BlogArticle() {
       ) : loadError ? (
         <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
           <p>Shopify article could not be loaded. {loadError}</p>
-          <button className="mt-4 underline" onClick={() => setRevision(value => value + 1)}>Try again</button>
+          <button className="mt-4 underline" onClick={() => setRevision(value => value + 1)}>{t("Try again")}</button>
         </div>
       ) : !article ? (
         <p className="mt-8 text-gray-600">This article could not be found.</p>
@@ -57,7 +59,7 @@ function BlogArticle() {
           </h1>
           <div className="mt-4 flex flex-wrap gap-3 text-sm text-gray-500">
             <time dateTime={article.publishedAt}>
-              {new Date(article.publishedAt).toLocaleDateString()}
+              {new Date(article.publishedAt).toLocaleDateString(getIntlLocale())}
             </time>
             {article.author && <span>By {article.author}</span>}
           </div>

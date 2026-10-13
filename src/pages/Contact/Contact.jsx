@@ -1,3 +1,4 @@
+import { t } from "../../utils/translations";
 import { useEffect, useState } from 'react';
 import { useSite } from '../../contexts/siteContext';
 import { getContentPage } from '../../services/shopify/siteService';
@@ -17,11 +18,11 @@ export default function Contact() {
     <div className="my-6 space-y-2 text-sm">{site?.contactEmail && <p><a className="underline" href={'mailto:' + site.contactEmail}>{site.contactEmail}</a></p>}{site?.contactPhone && <p><a className="underline" href={'tel:' + site.contactPhone}>{site.contactPhone}</a></p>}{site?.contactAddress && <p>{site.contactAddress}</p>}</div>
     <form method="post" action={(site?.primaryDomain?.url || 'https://' + domain) + '/contact#contact_form'} acceptCharset="UTF-8" className="space-y-5">
       <input type="hidden" name="form_type" value="contact" /><input type="hidden" name="utf8" value="✓" />
-      <label className="block text-sm">Name<input name="contact[name]" required autoComplete="name" className="mt-2 w-full border p-3" /></label>
-      <label className="block text-sm">Email<input name="contact[email]" type="email" required autoComplete="email" className="mt-2 w-full border p-3" /></label>
-      <label className="block text-sm">Message<textarea name="contact[body]" rows="6" required className="mt-2 w-full border p-3" /></label>
+      <label className="block text-sm">{t("Name")}<input name="contact[name]" required autoComplete="name" className="mt-2 w-full border p-3" /></label>
+      <label className="block text-sm">{t("Email")}<input name="contact[email]" type="email" required autoComplete="email" className="mt-2 w-full border p-3" /></label>
+      <label className="block text-sm">{t("Message")}<textarea name="contact[body]" rows="6" required className="mt-2 w-full border p-3" /></label>
       <p className="text-xs text-gray-500">Shopify securely processes your message on the store website and may ask for spam verification.</p>
-      <button className="bg-gray-900 px-8 py-3 text-white">Send message</button>
+      <button className="bg-gray-900 px-8 py-3 text-white">{t("Send message")}</button>
     </form>
   </section>;
 }
