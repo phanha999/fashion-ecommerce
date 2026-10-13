@@ -4,6 +4,10 @@
 
 Products, inventory, variants, prices, collections, pages, policies, blogs, customer profiles, addresses, orders and discounts are read from Shopify. No Admin API secret belongs in the React app.
 
+### Homepage category navigation
+
+For image_category and image_collection metaobjects, add a Collection reference field or a URL field to control the destination explicitly. Existing image/title-only entries use an exact, case-insensitive match against published Shopify collection titles. Entries without a unique matching collection open /shop. Metaobject handles are never used as collection handles.
+
 ### Pages
 
 Edit Shopify Content > Pages:
@@ -66,9 +70,9 @@ These checks require Shopify Admin / a customer and cannot be certified from fro
 4. Place a Shopify test order, verify payment result, admin order, notification email and account order history.
 5. Check fulfilment/tracking, refund workflow and actual store policies.
 6. Test public contact/newsletter forms and spam challenges on your hosted store.
-7. Connect the frontend HTTPS domain and configure SPA fallback for product, account and content routes.
+7. Connect the frontend HTTPS domain and use the supplied route rewrites: index.html for home, shop.html for shop, app.html for other React routes.
 8. Generate the sitemap for the frontend domain: npm run sitemap -- https://YOUR-FRONTEND-DOMAIN
-9. Run npm run verify, npm run test:e2e and npm audit.
+9. Run npm run verify and npm audit.
 10. Schedule sitemap regeneration/redeployment when published Shopify URLs change.
 
 Analytics is not loaded by default. Configure your chosen provider and consent rules before enabling tracking.
@@ -78,10 +82,12 @@ Analytics is not loaded by default. Configure your chosen provider and consent r
 The catalog implementation preserves complete unique-product counts and vendor/availability facet counts from Shopify products, because Shopify's search index can omit products and Storefront has no productsCount query.
 Base product pages are cached briefly and reused between filter/sort changes to reduce repeated full-catalog downloads. Very large catalogs should use a backend search/index service or a different count UX and true server cursor pagination.
 
-SEO metadata and structured data are rendered by React. The sitemap helps discovery, but server rendering/prerendering is a separate hosting improvement for crawlers that do not execute JavaScript.
+SEO metadata and structured data are rendered by React. The sitemap helps discovery, but server rendering/prerendering is a separate hosting improvement for crawlers that do not execute JavaScript. The optimized build adds resource hints and starts public requests early; it does not server-render the React page.
 
 ## Verification evidence
 
-Unit tests mock Shopify errors, sessions, quantities and cart operations.
-Browser tests mock Shopify responses and cover account/order/address/profile, wishlist, mobile search, cart persistence, discount code and checkout identity.
-Live scripts verify Shopify read schemas and cart create/add/update/remove without creating an order or charging a payment.
+Vercel and Netlify SPA routing and response headers are configured in the repository. Their deployment build requires `VITE_SITE_URL`, generates the sitemap and prepares route-specific resource hints automatically. For optimized local previews without a domain, use `npm run build:optimized` followed by `npm run preview:production`.
+
+Shopify-managed banner/category links are mapped to React collection, product, account and blog routes. External URLs keep their original host. Product and blog rich content use the same HTML sanitization as content pages.
+
+Shopify API requests have a 20-second timeout. Mutations are not retried automatically, since a lost response can still represent a completed cart/customer update. Policy and product pages provide explicit retry controls.

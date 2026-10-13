@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { useSite } from '../contexts/siteContext';
 import { useCustomerAccount } from '../contexts/customerAccountContext';
 import { updateProfile } from '../services/shopify/accountDetailsService';
+import { useNotifications } from '../contexts/notificationContext';
 export default function NewsletterForm({ label = 'Subscribe' }) {
+  const { notify } = useNotifications();
   const { site } = useSite();
   const { customer } = useCustomerAccount();
   const [busy, setBusy] = useState(false);
@@ -15,8 +17,8 @@ export default function NewsletterForm({ label = 'Subscribe' }) {
     if (!customer) return; // Shopify handles public newsletter forms, including anti-spam checks.
     event.preventDefault();
     setBusy(true); setError(''); setMessage('');
-    try { await updateProfile({ acceptsMarketing: true }); setMessage('You are subscribed to news and offers.'); }
-    catch { setError('Could not save your subscription. Please try again.'); }
+    try { await updateProfile({ acceptsMarketing: true }); setMessage('You are subscribed to news and offers.'); notify('You are subscribed to news and offers.'); }
+    catch { setError('Could not save your subscription. Please try again.'); notify('Could not save your subscription. Please try again.', 'error'); }
     finally { setBusy(false); }
   }
   return <div>

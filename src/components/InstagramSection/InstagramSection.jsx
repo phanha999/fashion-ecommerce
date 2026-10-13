@@ -1,4 +1,6 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
+import BannerLink from '../BannerLink';
 import { getInstagrams } from '../../services/shopify/contentService';
 
 function InstagramSection() {
@@ -54,12 +56,12 @@ function InstagramSection() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
             {instagrams.map((instagram) => (
-              <a
+              <BannerLink
                 key={instagram.id}
-                href={instagram.link}
+                to={instagram.link}
                 className="group relative aspect-square overflow-hidden"
               >
-                <img
+                <StoreImage
                   src={instagram.image}
                   alt="Velora Instagram"
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
@@ -70,7 +72,7 @@ function InstagramSection() {
                     ♡
                   </span>
                 </div>
-              </a>
+              </BannerLink>
             ))}
           </div>
         )}

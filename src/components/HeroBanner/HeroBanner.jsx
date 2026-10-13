@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react';
+import StoreImage from '../StoreImage';
+import { useEffect, useRef, useState } from 'react';
+import BannerLink from '../BannerLink';
 import { getHeroBanners } from '../../services/shopify/contentService';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination } from 'swiper/modules';
+
+
 
 import './HeroBanner.scss';
-import 'swiper/css';
-import 'swiper/css/pagination';
+
+
 
 function HeroBanner() {
   const [banners, setBanners] = useState([]);
+  const slider = useRef(null);
+  const [active, setActive] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
@@ -52,18 +56,14 @@ function HeroBanner() {
   }
 
   return (
-    <section>
-      <Swiper
-        modules={[Pagination]}
-        pagination={{ clickable: true }}
-        loop={banners.length > 1}
-        speed={700}
-        className="carouselWrapper h-[520px] sm:h-[640px] lg:h-[800px]"
-      >
-        {banners.map((banner) => (
-          <SwiperSlide key={banner.id}>
+    <section className="relative" aria-label="Featured collections" aria-roledescription="carousel"><div ref={slider} onScroll={event => setActive(Math.round(event.currentTarget.scrollLeft / event.currentTarget.clientWidth))} className="hero-slider flex h-[520px] snap-x snap-mandatory overflow-x-auto sm:h-[640px] lg:h-[800px]">
+        {banners.map((banner, index) => (
+          <div key={banner.id} className="h-full w-full shrink-0 snap-start" role="group" aria-roledescription="slide" aria-label={(index + 1) + ' of ' + banners.length}>
             <div className="relative h-full overflow-hidden">
-              <img
+              <StoreImage
+                priority={index === 0}
+                maxWidth={1920}
+                sizes="100vw"
                 src={banner.image}
                 alt={banner.imageAlt || banner.title}
                 className="h-full w-full object-cover"
@@ -86,19 +86,20 @@ function HeroBanner() {
                       {banner.description}
                     </p>
 
-                    <a
-                      href={banner.button_url}
+                    <BannerLink
+                      to={banner.button_url}
                       className="inline-block bg-white px-8 py-4 text-sm font-medium uppercase tracking-wider text-black transition duration-500 hover:bg-black hover:text-white"
                     >
                       {banner.button}
-                    </a>
+                    </BannerLink>
                   </div>
                 </div>
               </div>
             </div>
-          </SwiperSlide>
+          </div>
         ))}
-      </Swiper>
+      </div>
+      {banners.length > 1 && <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 rounded-full bg-black/40 px-2">{banners.map((banner, index) => <button key={banner.id} type="button" aria-label={'View slide ' + (index + 1)} aria-pressed={active === index} onClick={() => slider.current.scrollTo({left: slider.current.clientWidth * index, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'})} className="flex h-11 w-11 items-center justify-center"><span className={'h-2.5 w-2.5 rounded-full border border-white ' + (active === index ? 'bg-white' : 'bg-transparent')} /></button>)}</div>}
     </section>
   );
 }

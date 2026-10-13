@@ -1,47 +1,50 @@
+import StoreImage from '../../components/StoreImage';
 import Seo from '../../components/Seo';
+import SafeHtml from '../../components/SafeHtml';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getBlogArticle } from '../../services/shopify/blogService';
 
 function BlogArticle() {
   const { blogHandle, articleHandle } = useParams();
-  const [article, setArticle] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [result, setResult] = useState(null);
+  const [revision, setRevision] = useState(0);
+  const target = `${blogHandle}/${articleHandle}`;
+  const current = result?.target === target && result.revision === revision ? result : null;
+  const article = current?.article;
+  const isLoading = !current;
+  const loadError = current?.error;
 
   useEffect(() => {
     let cancelled = false;
 
     getBlogArticle(blogHandle, articleHandle)
       .then((shopifyArticle) => {
-        if (!cancelled) setArticle(shopifyArticle);
+        if (!cancelled) setResult({ target, revision, article: shopifyArticle });
       })
       .catch((error) => {
-        console.error('Could not load the Shopify blog article:', error);
-        if (!cancelled) setLoadError(error.message || 'Unknown Shopify error.');
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) setResult({ target, revision, error: error.message || 'Please try again.' });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [blogHandle, articleHandle]);
+  }, [blogHandle, articleHandle, target, revision]);
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-16 md:px-8">
+    <section className="mx-auto max-w-4xl px-4 py-16 md:px-8">
       <Seo title={article?.title || 'Journal'} description={article?.description || ''} image={article?.image} />
       <Link to="/blogs" className="text-sm text-gray-600 underline underline-offset-4">
-        Back to home
+        Back to journal
       </Link>
 
       {isLoading ? (
         <div className="mt-8 h-96 animate-pulse bg-gray-100" aria-label="Loading article" />
       ) : loadError ? (
-        <p className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
-          Shopify article could not be loaded. {loadError}
-        </p>
+        <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+          <p>Shopify article could not be loaded. {loadError}</p>
+          <button className="mt-4 underline" onClick={() => setRevision(value => value + 1)}>Try again</button>
+        </div>
       ) : !article ? (
         <p className="mt-8 text-gray-600">This article could not be found.</p>
       ) : (
@@ -59,7 +62,7 @@ function BlogArticle() {
             {article.author && <span>By {article.author}</span>}
           </div>
           {article.image && (
-            <img
+            <StoreImage
               src={article.image}
               alt={article.imageAlt}
               className="mt-8 max-h-[600px] w-full object-cover"
@@ -70,12 +73,10 @@ function BlogArticle() {
               {article.description}
             </p>
           )}
-          <div className="mt-8 whitespace-pre-line text-base leading-8 text-gray-700">
-            {article.content}
-          </div>
+          {article.contentHtml ? <div className="mt-8"><SafeHtml html={article.contentHtml} /></div> : <div className="mt-8 whitespace-pre-line text-base leading-8 text-gray-700">{article.content}</div>}
         </article>
       )}
-    </main>
+    </section>
   );
 }
 

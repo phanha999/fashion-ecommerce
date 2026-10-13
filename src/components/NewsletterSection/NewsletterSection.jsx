@@ -1,3 +1,4 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import NewsletterForm from '../NewsletterForm';
 import { getBanners } from '../../services/shopify/contentService';
@@ -55,7 +56,7 @@ function NewsletterSection() {
     <section className="mx-auto max-w-[1920px] px-4 py-20 md:px-8 2xl:px-16">
       <div className="grid overflow-hidden bg-gray-50 lg:grid-cols-2">
         <div className="relative min-h-[280px] bg-gray-100 sm:min-h-[380px] lg:min-h-[480px]">
-          <img
+          <StoreImage
             src={banner.image}
             alt={banner.imageAlt || banner.title || 'Newsletter'}
             className="absolute inset-0 h-full w-full object-cover"

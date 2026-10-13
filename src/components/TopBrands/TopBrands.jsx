@@ -1,3 +1,4 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import { getBrands } from '../../services/shopify/contentService';
 
@@ -70,7 +71,7 @@ function TopBrands() {
                 key={brand.id}
                 className="group relative aspect-square overflow-hidden"
               >
-                <img 
+                <StoreImage
                   src={brand.backgroundImage}
                   alt={brand.altBackgroundImage}
                   className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -79,12 +80,12 @@ function TopBrands() {
                 <div className="absolute inset-0 bg-black/50 transition group-hover:bg-black/40" />
 
                 <div className="relative flex h-full items-center justify-center p-8">
-                  <img
-                    src={brand.image}   
+                  <StoreImage
+                    src={brand.image}
                     alt={brand.imageAlt}
                     className="max-h-14 max-w-[300px] object-contain"
                   />
-                </div> 
+                </div>
               </div>
             ))}
           </div>

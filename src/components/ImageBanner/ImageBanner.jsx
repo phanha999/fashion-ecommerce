@@ -1,3 +1,4 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import BannerLink from '../BannerLink';
 import { getBanners } from '../../services/shopify/contentService';
@@ -52,7 +53,7 @@ function ImageBanner() {
               key={banner.id}
               className="relative h-[420px] overflow-hidden sm:h-[500px] lg:h-[600px]"
             >
-              <img
+              <StoreImage
                 src={banner.image}
                 alt={banner.imageAlt || ''}
                 className="h-full w-full object-cover"

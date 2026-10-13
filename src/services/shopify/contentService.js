@@ -100,28 +100,50 @@ function getFieldValue(fields, keys) {
   return '';
 }
 
-function getCategoryLink(url, collectionHandle, entryHandle) {
+function getCategoryLink(url, collectionHandle) {
   if (collectionHandle) {
     return '/shop?collection=' + encodeURIComponent(collectionHandle);
   }
 
   if (url) {
-    if (url.startsWith('/')) return url;
-
-    try {
-      const parsedUrl = new URL(url);
-      const collectionPath = parsedUrl.pathname.match(/\/collections\/([^/]+)/);
-      if (collectionPath) {
-        return '/shop?collection=' + encodeURIComponent(collectionPath[1]);
-      }
-
-      return parsedUrl.pathname + parsedUrl.search;
-    } catch {
-      return '/shop?collection=' + encodeURIComponent(url);
-    }
+    return url;
   }
 
-  return '/shop?collection=' + encodeURIComponent(entryHandle);
+  return '/shop';
+}
+
+async function getCategoryDestinations(entries) {
+  const normalize = value => value.trim().normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, ' ');
+  const destinations = new Map();
+  const unresolved = [];
+  for (const entry of entries) {
+    const fields = getMetaobjectFields(entry);
+    const reference = entry.fields.find(field => field.reference?.__typename === 'Collection');
+    const handle = reference?.reference.handle || getFieldValue(fields, ['collection_handle'])
+      || (fields.collection?.type === 'single_line_text_field' ? fields.collection.value : '');
+    const url = getFieldValue(fields, ['url', 'link', 'collection_url', 'button_url']);
+    if (handle || url) destinations.set(entry.id, getCategoryLink(url, handle));
+    else unresolved.push({ id: entry.id, title: getFieldValue(fields, ['title', 'name', 'category_name', 'label']) });
+  }
+  if (unresolved.length) {
+    const matches = new Map();
+    let after = null;
+    do {
+      const data = await shopifyFetch(`query NavigationCollections($after: String) {
+        collections(first: 250, after: $after) { nodes { handle title } pageInfo { hasNextPage endCursor } }
+      }`, { after });
+      for (const collection of data.collections.nodes) {
+        const key = normalize(collection.title);
+        // Ambiguous names must be linked explicitly in Shopify.
+        matches.set(key, matches.has(key) ? null : collection.handle);
+      }
+      const page = data.collections.pageInfo;
+      if (page.hasNextPage && (!page.endCursor || page.endCursor === after)) throw new Error('Could not load collection navigation.');
+      after = page.hasNextPage ? page.endCursor : null;
+    } while (after);
+    for (const entry of unresolved) destinations.set(entry.id, getCategoryLink('', matches.get(normalize(entry.title))));
+  }
+  return destinations;
 }
 
 export async function getHeroBanners({ first = 10, type = 'hero_slide' } = {}) {
@@ -169,14 +191,10 @@ export async function getCategories({ first = 20, type = 'image_category' } = {}
     throw new Error('No Shopify entries found for metaobject type "' + type.trim() + '". Check the definition API type and that entries are Active.');
   }
 
+  const destinations = await getCategoryDestinations(entries);
   const categories = entries.map((entry) => {
     const fields = getMetaobjectFields(entry);
     const image = getMetaobjectImage(entry);
-    const collectionReference = entry.fields.find(
-      (field) => field.reference?.__typename === 'Collection',
-    );
-    const collectionHandle = collectionReference?.reference?.handle
-      || getFieldValue(fields, ['collection_handle', 'collection']);
     const title = getFieldValue(fields, ['title', 'name', 'category_name', 'label'])
       || entry.handle.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
@@ -185,11 +203,7 @@ export async function getCategories({ first = 20, type = 'image_category' } = {}
       title,
       image: image.url,
       imageAlt: image.alt || title,
-      link: getCategoryLink(
-        getFieldValue(fields, ['url', 'link', 'collection_url', 'button_url']),
-        collectionHandle,
-        entry.handle,
-      ),
+      link: destinations.get(entry.id),
     };
   }).filter((category) => category.image);
 
@@ -207,14 +221,10 @@ export async function getCollection({ first = 20, type = 'image_collection' } = 
     throw new Error('No Shopify entries found for metaobject type "' + type.trim() + '". Check the definition API type and that entries are Active.');
   }
 
+  const destinations = await getCategoryDestinations(entries);
   const categories = entries.map((entry) => {
     const fields = getMetaobjectFields(entry);
     const image = getMetaobjectImage(entry);
-    const collectionReference = entry.fields.find(
-      (field) => field.reference?.__typename === 'Collection',
-    );
-    const collectionHandle = collectionReference?.reference?.handle
-      || getFieldValue(fields, ['collection_handle', 'collection']);
     const title = getFieldValue(fields, ['title', 'name', 'category_name', 'label'])
       || entry.handle.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
@@ -224,11 +234,7 @@ export async function getCollection({ first = 20, type = 'image_collection' } = 
       description: fields.description?.value || '',
       image: image.url,
       imageAlt: image.alt || title,
-      link: getCategoryLink(
-        getFieldValue(fields, ['url', 'link', 'collection_url', 'button_url']),
-        collectionHandle,
-        entry.handle,
-      ),
+      link: destinations.get(entry.id),
     };
   }).filter((category) => category.image);
 

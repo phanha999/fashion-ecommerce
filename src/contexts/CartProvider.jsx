@@ -3,9 +3,11 @@ import { CartContext } from './cartContext';
 import { addCartLine, getCart, removeCartLine, updateCartLine, updateCartBuyer, updateCartDiscounts } from '../services/shopify/cartService';
 import { readStoredSession } from '../services/shopify/accountService';
 import { useCustomerAccount } from './customerAccountContext';
+import { useNotifications } from './notificationContext';
 
 const key = 'velora_shopify_cart_id';
 export default function CartProvider({ children }) {
+  const { notify } = useNotifications();
   const { customer, isLoading: accountLoading } = useCustomerAccount();
   const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,23 +61,32 @@ export default function CartProvider({ children }) {
     }).catch(() => {});
   }, [customer, accountLoading, enqueue, save, identity]);
 
-  function mutate(operation) {
+  function mutate(operation, message, action) {
     return enqueue(async () => {
+      try {
       const existing = await restore();
       const next = await operation(existing);
       save(next);
+      const warnings = next?.warnings?.map(item => item.message).join(' ');
+      if (warnings) notify(warnings, 'warning');
+      else if (message) {
+        const notice = typeof message === 'function' ? message(next) : { message, type: 'success' };
+        notify(notice.message, notice.type, action);
+      }
       return next;
+      } catch (failure) { notify(failure.message || 'Could not update your cart.', 'error'); throw failure; }
     });
   }
   return (
     <CartContext.Provider value={{
       cart, isLoading, isUpdating, error, refresh,
-      addItem: (variantId, quantity = 1) => mutate(existing => addCartLine(existing?.id, variantId, quantity, identity())),
-      updateItem: (id, quantity) => mutate(existing => { if (!existing) throw new Error('Your cart expired. Please add your products again.'); return updateCartLine(existing.id, id, quantity); }),
-      removeItem: id => mutate(existing => { if (!existing) return null; return removeCartLine(existing.id, id); }),
-      setDiscounts: codes => mutate(existing => { if (!existing) throw new Error('Add a product before applying a discount.'); return updateCartDiscounts(existing.id, codes); }),
+      addItem: (variantId, quantity = 1) => mutate(existing => addCartLine(existing?.id, variantId, quantity, identity()), 'Added to your cart.', { to: '/cart', label: 'View cart' }),
+      updateItem: (id, quantity) => mutate(existing => { if (!existing) throw new Error('Your cart expired. Please add your products again.'); return updateCartLine(existing.id, id, quantity); }, 'Cart quantity updated.'),
+      removeItem: id => mutate(existing => { if (!existing) return null; return removeCartLine(existing.id, id); }, 'Item removed from your cart.'),
+      setDiscounts: codes => mutate(existing => { if (!existing) throw new Error('Add a product before applying a discount.'); return updateCartDiscounts(existing.id, codes); }, next => next.discountCodes?.some(code => !code.applicable) ? { message: 'This discount does not apply to your cart.', type: 'warning' } : { message: codes.length ? 'Discount codes updated.' : 'Discount code removed.', type: 'success' }),
       checkout: () => mutate(async existing => {
         if (!existing?.totalQuantity) throw new Error('Your cart is empty. Please add a product first.');
+        notify('Opening secure Shopify checkout…', 'info');
         const next = await updateCartBuyer(existing.id, identity());
         if (!next.totalQuantity) throw new Error('Your products are no longer available.');
         const url = new URL(next.checkoutUrl);

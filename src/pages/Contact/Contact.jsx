@@ -12,7 +12,7 @@ export default function Contact() {
     return () => { cancelled = true; };
   }, []);
   const domain = (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
-  return <main className="mx-auto max-w-3xl px-4 py-12"><Seo title={'Contact | ' + (site?.name || 'Store')} description="Get in touch with our store." /><h1 className="mb-8 text-3xl font-bold">{page?.title || 'Contact us'}</h1>
+  return <section className="mx-auto max-w-3xl px-4 py-12"><Seo title={'Contact | ' + (site?.name || 'Store')} description="Get in touch with our store." /><h1 className="mb-8 text-3xl font-bold">{page?.title || 'Contact us'}</h1>
     {page?.body && <SafeHtml html={page.body} />}
     <div className="my-6 space-y-2 text-sm">{site?.contactEmail && <p><a className="underline" href={'mailto:' + site.contactEmail}>{site.contactEmail}</a></p>}{site?.contactPhone && <p><a className="underline" href={'tel:' + site.contactPhone}>{site.contactPhone}</a></p>}{site?.contactAddress && <p>{site.contactAddress}</p>}</div>
     <form method="post" action={(site?.primaryDomain?.url || 'https://' + domain) + '/contact#contact_form'} acceptCharset="UTF-8" className="space-y-5">
@@ -23,5 +23,5 @@ export default function Contact() {
       <p className="text-xs text-gray-500">Shopify securely processes your message on the store website and may ask for spam verification.</p>
       <button className="bg-gray-900 px-8 py-3 text-white">Send message</button>
     </form>
-  </main>;
+  </section>;
 }

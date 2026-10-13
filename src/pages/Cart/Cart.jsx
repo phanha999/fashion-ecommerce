@@ -1,3 +1,4 @@
+import StoreImage from '../../components/StoreImage';
 import Seo from '../../components/Seo';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -27,7 +28,7 @@ export default function Cart() {
               const image = variant.image || variant.product.featuredImage;
               return (
                 <div key={line.id} className="flex gap-5 py-6">
-                  <Link to={'/products/' + encodeURIComponent(variant.product.id)} className="w-24 shrink-0 bg-gray-100">{image && <img src={image.url} alt={image.altText || variant.product.title} className="h-32 w-full object-cover" />}</Link>
+                  <Link to={'/products/' + encodeURIComponent(variant.product.id)} className="w-24 shrink-0 bg-gray-100">{image && <StoreImage src={image.url} alt={image.altText || variant.product.title} className="h-32 w-full object-cover" />}</Link>
                   <div className="min-w-0 flex-1">
                     <Link to={'/products/' + encodeURIComponent(variant.product.id)} className="font-medium">{variant.product.title}</Link>
                     {variant.title !== 'Default Title' && <p className="mt-1 text-sm text-gray-500">{variant.title}</p>}

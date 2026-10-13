@@ -1,3 +1,4 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import BannerLink from '../BannerLink';
 import { getBanners } from '../../services/shopify/contentService';
@@ -71,7 +72,7 @@ function ContactSection() {
         )}
 
         <div className="mx-auto mt-8 h-[280px] max-w-4xl overflow-hidden bg-gray-100">
-          <img
+          <StoreImage
             src={banner.image}
             alt={banner.imageAlt || banner.title || 'Contact our support team'}
             className="h-full w-full object-cover"

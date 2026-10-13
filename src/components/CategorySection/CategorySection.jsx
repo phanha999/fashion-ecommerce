@@ -1,5 +1,6 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import BannerLink from '../BannerLink';
 import { getCategories } from '../../services/shopify/contentService';
 
 function CategorySection() {
@@ -66,12 +67,12 @@ function CategorySection() {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:gap-[30px] md:grid-cols-4">
             {categories.map((category) => (
-              <Link
+              <BannerLink
                 key={category.id}
                 to={category.link}
                 className="group relative aspect-[3/4] overflow-hidden"
               >
-                <img
+                <StoreImage
                   src={category.image}
                   alt={category.imageAlt}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -84,7 +85,7 @@ function CategorySection() {
                     {category.title}
                   </h3>
                 </div>
-              </Link>
+              </BannerLink>
             ))}
           </div>
         )}

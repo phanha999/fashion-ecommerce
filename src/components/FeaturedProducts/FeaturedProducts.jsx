@@ -1,3 +1,4 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import BannerLink from '../BannerLink';
@@ -12,7 +13,7 @@ function ProductItem({ product }) {
     >
 
       <div className="w-32 sm:w-44 md:w-36 lg:w-44 h-32 sm:h-44 md:h-36 lg:h-44 shrink-0 overflow-hidden bg-gray-100">
-        <img
+        <StoreImage
           src={product.image}
           alt={product.name}
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -20,7 +21,7 @@ function ProductItem({ product }) {
       </div>
 
       <div className="flex flex-col">
-        <h3 className="text-sm font-medium text-gray-900">
+        <h3 className="text-sm font-bold text-gray-900">
           {product.name}
         </h3>
 
@@ -117,7 +118,7 @@ function FeaturedProducts() {
           <div>
             {banners.map((banner) => (
               <div key={banner.id} className="relative min-h-[420px] overflow-hidden md:min-h-[520px] lg:col-span-1 lg:min-h-[600px]">
-                <img
+                <StoreImage
                   src={banner.image}
                   alt={banner.imageAlt || ''}
                   className="absolute inset-0 h-full w-full object-cover"

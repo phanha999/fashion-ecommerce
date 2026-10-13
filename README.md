@@ -29,29 +29,28 @@ Legacy accounts need unauthenticated_read_customers and unauthenticated_write_cu
 
 Read docs/SHOPIFY-OPERATIONS.md for Shopify content setup and remaining admin checks.
 
+Manage navigation in Shopify Admin → Content → Menus. The header reads `main-menu` and the footer reads `footer`, including up to three levels of links in the saved order. Items with children become mega menus: hover on desktop above 1024px, with keyboard/click support; tablet and mobile use a Menu button and a drawer with expandable groups. Rename, reorder, add or remove items in Shopify, save, then reload the storefront. Collection/product/page links open their React routes; external, email and telephone links keep their destinations. Theme-specific `?view=` links do not switch layouts in this React storefront. Collection images can appear inside matching mega menus when configured in Shopify.
+
 ## Verify
 
-npm run verify
-npm run test:e2e
-
-21 unit tests and 5 browser scenarios currently cover auth, account details, cart and core UI flows. Browser tests mock Shopify; they never submit a real customer form or charge a payment.
-
-Optional live diagnostics:
-node scripts/check-shopify-readiness.mjs
-node scripts/check-shopify-cart.mjs
-node scripts/check-live-ui.mjs
-
-The cart diagnostic creates a temporary Shopify cart and empties it afterwards. It never places an order.
-The live UI diagnostic expects Vite on http://127.0.0.1:5174.
+Run npm run verify to check lint and the production build.
 
 ## Deploy
 
-Use HTTPS hosting with SPA fallback to index.html for React routes. Set public Shopify environment variables during build. Never expose an Admin token, private Storefront token or client secret.
+Use HTTPS hosting with the included route rewrites. Set public Shopify environment variables during build. Never expose an Admin token, private Storefront token or client secret.
+
+Vercel and Netlify configuration files are included. Both use `npm run build:deploy`, which generates a fresh sitemap before building. Set `VITE_SITE_URL` to the real frontend HTTPS origin in the host's build environment. Deployment environment variables take precedence over local environment files. A domain is not needed for local development or `npm run verify`.
 
 Generate sitemap/robots for the actual frontend domain before building:
 npm run sitemap -- https://YOUR-FRONTEND-DOMAIN
-npm run build
+npm run build:optimized
 
 Publish dist/ using your chosen hosting provider. Shipping/refund/terms policies and payment/shipping/tax configuration remain managed in Shopify.
 
-GitHub Actions runs lint, unit tests, build and mocked browser tests when changes are pushed.
+
+
+## Motion, notifications and performance
+
+Cart, wishlist, account changes and connection changes use dismissible live notifications. Motion uses transform/opacity, native scrolling and IntersectionObserver; reduced-motion preferences disable animation. Offscreen homepage sections and route code load on demand.
+
+Responsive Shopify images avoid downloading full-size originals. The optimized build preloads the first home/shop image and starts matching public Shopify reads before the React bundle finishes loading. Account/cart requests are never prefetched, and live prices remain sourced from Shopify.

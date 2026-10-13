@@ -253,7 +253,7 @@ const HOME_PRODUCTS_QUERY = `
   query HomeProducts($first: Int!, $sortKey: ProductSortKeys!, $reverse: Boolean!) {
     products(first: $first, sortKey: $sortKey, reverse: $reverse) {
       nodes {
-        id handle
+        id handle availableForSale
         title
         description
         vendor
@@ -283,7 +283,7 @@ const BEST_SELLERS_COLLECTION_QUERY = `
     collection(handle: $handle) {
       products(first: $first, sortKey: BEST_SELLING) {
         nodes {
-          id handle
+          id handle availableForSale
           title
           description
           vendor
@@ -358,7 +358,7 @@ export async function getProductDetail(id) {
   do {
     const data = await shopifyFetch(`query ProductDetail(${byId ? '$id: ID!' : '$handle: String!'}, $after: String) {
       ${lookup}
-        id handle title description vendor seo { title description }
+        id handle title description descriptionHtml vendor seo { title description }
         images(first: 100) { nodes { url altText } }
         reviews: metafield(namespace: "custom", key: "reviews") { value }
         featuredImage { url altText }

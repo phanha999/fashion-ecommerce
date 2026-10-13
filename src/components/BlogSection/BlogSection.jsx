@@ -1,3 +1,4 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -80,7 +81,7 @@ function BlogSection() {
                   <Link to={`/blogs/${article.blogHandle}/${article.handle}`}>
                     <div className="aspect-[4/3] overflow-hidden bg-gray-100">
                       {article.image && (
-                        <img
+                        <StoreImage
                           src={article.image}
                           alt={article.imageAlt}
                           loading="lazy"

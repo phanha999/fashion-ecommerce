@@ -1,4 +1,6 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
+import BannerLink from '../BannerLink';
 import { getCollection } from '../../services/shopify/contentService';
 import './GridBanner.scss';
 
@@ -71,12 +73,12 @@ function GridBanner() {
                 : 'grid-banner-small'; 
 
             return (
-              <a
+              <BannerLink
                 key={collection.id}
-                href={collection.link}
+                to={collection.link}
                 className={`group relative block overflow-hidden ${layoutClass}`}
               >
-                <img
+                <StoreImage
                   src={collection.image}
                   alt={collection.imageAlt || collection.title}
                   className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
@@ -97,7 +99,7 @@ function GridBanner() {
                     Shop now
                   </span>
                 </div>
-              </a>
+              </BannerLink>
             );
           })}
         </div>

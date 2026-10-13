@@ -1,18 +1,20 @@
 import Seo from '../../components/Seo';
+import { lazy } from 'react';
+import DeferredSection from '../../components/DeferredSection';
 import { useSite } from '../../contexts/siteContext';
 import HeroBanner from '../../components/HeroBanner/HeroBanner';
 import CategorySection from '../../components/CategorySection/CategorySection';
 import NewArrivals from '../../components/NewArrivals/NewArrivals';
-import GridBanner from '../../components/GridBanner/GridBanner';
-import BestSellers from '../../components/BestSellers/BestSellers';
-import ImageBanner from '../../components/ImageBanner/ImageBanner';
-import TopBrands from '../../components/TopBrands/TopBrands';
-import FeaturedProducts from '../../components/FeaturedProducts/FeaturedProducts';
-import AppBanner from '../../components/AppBanner/AppBanner';
-import ContactSection from '../../components/ContactSection/ContactSection';
-import BlogSection from '../../components/BlogSection/BlogSection';
-import NewsletterSection from '../../components/NewsletterSection/NewsletterSection';
-import InstagramSection from '../../components/InstagramSection/InstagramSection';
+const GridBanner = lazy(() => import('../../components/GridBanner/GridBanner'));
+const BestSellers = lazy(() => import('../../components/BestSellers/BestSellers'));
+const ImageBanner = lazy(() => import('../../components/ImageBanner/ImageBanner'));
+const TopBrands = lazy(() => import('../../components/TopBrands/TopBrands'));
+const FeaturedProducts = lazy(() => import('../../components/FeaturedProducts/FeaturedProducts'));
+const AppBanner = lazy(() => import('../../components/AppBanner/AppBanner'));
+const ContactSection = lazy(() => import('../../components/ContactSection/ContactSection'));
+const BlogSection = lazy(() => import('../../components/BlogSection/BlogSection'));
+const NewsletterSection = lazy(() => import('../../components/NewsletterSection/NewsletterSection'));
+const InstagramSection = lazy(() => import('../../components/InstagramSection/InstagramSection'));
 
 function Home() {
   const { site } = useSite();
@@ -22,18 +24,18 @@ function Home() {
       <HeroBanner />
       <CategorySection />
       <NewArrivals />
-      <GridBanner />
-      <BestSellers />
-      <ImageBanner />
-      <TopBrands />
-      <FeaturedProducts />
-      <AppBanner />
-      <ContactSection />
-      <BlogSection />
-      <NewsletterSection />
-      <InstagramSection />
+      <DeferredSection label="collections"><GridBanner /></DeferredSection>
+      <DeferredSection label="best sellers"><BestSellers /></DeferredSection>
+      <DeferredSection label="campaign"><ImageBanner /></DeferredSection>
+      <DeferredSection label="brands"><TopBrands /></DeferredSection>
+      <DeferredSection label="featured products"><FeaturedProducts /></DeferredSection>
+      <DeferredSection label="app"><AppBanner /></DeferredSection>
+      <DeferredSection label="contact"><ContactSection /></DeferredSection>
+      <DeferredSection label="journal"><BlogSection /></DeferredSection>
+      <DeferredSection label="newsletter"><NewsletterSection /></DeferredSection>
+      <DeferredSection label="social"><InstagramSection /></DeferredSection>
     </>
   );
 }
 
-export default Home;  
+export default Home;

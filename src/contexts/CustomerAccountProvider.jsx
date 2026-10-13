@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { CustomerAccountContext } from './customerAccountContext';
 import { getCustomerProfile, loginCustomer, logoutCustomer, readStoredSession } from '../services/shopify/accountService';
+import { useNotifications } from './notificationContext';
 
 export default function CustomerAccountProvider({ children }) {
+  const { notify } = useNotifications();
   const [customer, setCustomer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -49,9 +51,11 @@ export default function CustomerAccountProvider({ children }) {
     try {
       const profile = await loginCustomer(credentials);
       if (version === revision.current) setCustomer(profile);
+      notify('You are signed in.');
       return true;
     } catch (failure) {
       if (version === revision.current) setError(failure.message || 'Could not sign in.');
+      notify(failure.message || 'Could not sign in.', 'error');
       return false;
     } finally {
       setIsSigningIn(false);
@@ -65,8 +69,10 @@ export default function CustomerAccountProvider({ children }) {
     setCustomer(null);
     try {
       await logoutCustomer();
+      notify('You are signed out.');
     } catch {
       setError('You signed out locally, but Shopify could not revoke the session. Please check your connection.');
+      notify('Signed out on this device. Shopify could not revoke the session; check your connection.', 'warning');
     } finally {
       setIsSigningOut(false);
     }

@@ -1,6 +1,8 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import { getAccountDetails, getOrders, updateProfile, saveAddress, deleteAddress, setDefaultAddress } from '../../services/shopify/accountDetailsService';
 import { useCustomerAccount } from '../../contexts/customerAccountContext';
+import { useNotifications } from '../../contexts/notificationContext';
 
 const field = 'mt-1 w-full border border-gray-300 p-3';
 const button = 'border border-gray-300 px-4 py-2 text-sm disabled:opacity-50';
@@ -10,6 +12,7 @@ function money(value) {
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: value.currencyCode }).format(Number(value.amount));
 }
 export default function AccountDashboard() {
+  const { notify } = useNotifications();
   const { customer, refreshCustomer } = useCustomerAccount();
   const [details, setDetails] = useState(null);
   const [orders, setOrders] = useState(null);
@@ -34,8 +37,8 @@ export default function AccountDashboard() {
   async function perform(action, message) {
     if (busy) return;
     setBusy(true); setError(''); setNotice('');
-    try { await action(); setNotice(message); }
-    catch (failure) { setError(failure.message || 'Please try again.'); }
+    try { await action(); setNotice(message); notify(message); }
+    catch (failure) { setError(failure.message || 'Please try again.'); notify(failure.message || 'Please try again.', 'error'); }
     finally { setBusy(false); }
   }
   function profileSubmit(event) {
@@ -70,7 +73,7 @@ export default function AccountDashboard() {
             <p className="mt-2 text-sm text-gray-500">{new Date(order.processedAt).toLocaleDateString()} · {order.financialStatus?.replaceAll('_', ' ')} · {order.fulfillmentStatus?.replaceAll('_', ' ')}</p>
             <button onClick={() => setExpanded(expanded === order.id ? null : order.id)} className="mt-3 text-sm underline">{expanded === order.id ? 'Hide details' : 'View details'}</button>
             {expanded === order.id && <div className="mt-4 space-y-3">
-              {order.lineItems.nodes.map((line, index) => <div key={index} className="flex gap-3">{line.variant?.image && <img className="h-16 w-12 object-cover" src={line.variant.image.url} alt={line.variant.image.altText || line.title} />}<p className="text-sm">{line.title}<br />{line.variant?.title !== 'Default Title' ? line.variant?.title : ''} · Qty {line.quantity}</p></div>)}
+              {order.lineItems.nodes.map((line, index) => <div key={index} className="flex gap-3">{line.variant?.image && <StoreImage className="h-16 w-12 object-cover" src={line.variant.image.url} alt={line.variant.image.altText || line.title} />}<p className="text-sm">{line.title}<br />{line.variant?.title !== 'Default Title' ? line.variant?.title : ''} · Qty {line.quantity}</p></div>)}
               {order.lineItems.pageInfo.hasNextPage && <p className="text-sm">View all items on the order status page below.</p>}
               {order.shippingAddress && <p className="text-sm">Ship to: {order.shippingAddress.formatted.join(', ')}</p>}
               {order.statusUrl?.startsWith('https://') && <a href={order.statusUrl} target="_blank" rel="noreferrer" className="inline-block text-sm underline">Track order / delivery status</a>}

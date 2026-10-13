@@ -1,22 +1,49 @@
+import { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import MainLayout from './layouts/MainLayout';
 
-import Home from './pages/Home/Home';
-import Shop from './pages/Shop/Shop';
-import ProductDetail from './pages/ProductDetail/ProductDetail';
-import Cart from './pages/Cart/Cart';
-import BlogArticle from './pages/BlogArticle/BlogArticle';
-import Account from './pages/Account/Account';
-import Contact from './pages/Contact/Contact';
-import ContentPage from './pages/Content/ContentPage';
-import NotFound from './pages/NotFound';
-import Wishlist from './pages/Wishlist/Wishlist';
-import Blog from './pages/Blog/Blog';
+const pageLoaders = {
+  Home: () => import('./pages/Home/Home'),
+  Shop: () => import('./pages/Shop/Shop'),
+  ProductDetail: () => import('./pages/ProductDetail/ProductDetail'),
+  Cart: () => import('./pages/Cart/Cart'),
+  BlogArticle: () => import('./pages/BlogArticle/BlogArticle'),
+  Account: () => import('./pages/Account/Account'),
+  Contact: () => import('./pages/Contact/Contact'),
+  ContentPage: () => import('./pages/Content/ContentPage'),
+  NotFound: () => import('./pages/NotFound'),
+  Wishlist: () => import('./pages/Wishlist/Wishlist'),
+  Blog: () => import('./pages/Blog/Blog'),
+};
+const Home = lazy(pageLoaders.Home);
+const Shop = lazy(pageLoaders.Shop);
+const ProductDetail = lazy(pageLoaders.ProductDetail);
+const Cart = lazy(pageLoaders.Cart);
+const BlogArticle = lazy(pageLoaders.BlogArticle);
+const Account = lazy(pageLoaders.Account);
+const Contact = lazy(pageLoaders.Contact);
+const ContentPage = lazy(pageLoaders.ContentPage);
+const NotFound = lazy(pageLoaders.NotFound);
+const Wishlist = lazy(pageLoaders.Wishlist);
+const Blog = lazy(pageLoaders.Blog);
 
+const warmedPages = new Set();
+function preloadLink(event) {
+  if (navigator.connection?.saveData) return;
+  const link = event.target.closest?.('a[href]');
+  if (!link || link.hasAttribute('download')) return;
+  const url = new URL(link.href, window.location.href);
+  if (url.origin !== window.location.origin) return;
+  const path = url.pathname;
+  const name = path === '/' ? 'Home' : path === '/shop' ? 'Shop' : path.startsWith('/products/') ? 'ProductDetail' : path === '/cart' ? 'Cart' : path === '/account' ? 'Account' : path === '/wishlist' ? 'Wishlist' : path === '/blogs' ? 'Blog' : path.startsWith('/blogs/') ? 'BlogArticle' : path === '/pages/contact' ? 'Contact' : path.startsWith('/pages/') || path.startsWith('/policies/') ? 'ContentPage' : null;
+  if (!name || warmedPages.has(name)) return;
+  warmedPages.add(name);
+  pageLoaders[name]().catch(() => warmedPages.delete(name));
+}
 function App() {
   return (
-    <Routes>
+    <div className="contents" onPointerOver={preloadLink} onFocus={preloadLink} onPointerDown={preloadLink}><Routes>
       <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
@@ -34,7 +61,7 @@ function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/blogs/:blogHandle/:articleHandle" element={<BlogArticle />} />
       </Route>
-    </Routes>
+    </Routes></div>
   );
 }
 

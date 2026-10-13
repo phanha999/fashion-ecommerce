@@ -6,6 +6,7 @@ const ARTICLE_FIELDS = `
   title
   excerpt
   content
+  contentHtml
   publishedAt
   tags
   image { url altText }
@@ -49,6 +50,7 @@ function mapArticle(article, blog) {
     title: article.title,
     description: article.excerpt || article.content.slice(0, 180),
     content: article.content,
+    contentHtml: article.contentHtml || '',
     image: article.image?.url || '',
     imageAlt: article.image?.altText || article.title,
     publishedAt: article.publishedAt,

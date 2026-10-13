@@ -1,3 +1,4 @@
+import StoreImage from '../StoreImage';
 import { useEffect, useState } from 'react';
 import BannerLink from '../BannerLink';
 import { getBanners } from '../../services/shopify/contentService';
@@ -56,7 +57,7 @@ function AppBanner() {
       <div className="relative overflow-hidden bg-gray-100">
         <div className="grid lg:min-h-[700px] lg:grid-cols-2">
           <div className="relative min-h-[350px] overflow-hidden lg:min-h-0">
-            <img
+            <StoreImage
               src={banner.image}
               alt={banner.imageAlt || 'Velora mobile app'}
               className="absolute inset-0 h-full w-full object-cover"

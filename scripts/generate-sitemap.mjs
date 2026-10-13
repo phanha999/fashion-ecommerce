@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-const env = { ...process.env };
-for (const file of ['.env', '.env.local', '.env.production']) {
+const env = {};
+for (const file of ['.env', '.env.local', '.env.production', '.env.production.local']) {
   try {
     for (const line of (await readFile(file, 'utf8')).split(String.fromCharCode(10))) {
       if (!line.trim() || line.trim().startsWith('#')) continue;
@@ -9,15 +9,16 @@ for (const file of ['.env', '.env.local', '.env.production']) {
     }
   } catch { /* Optional environment files. */ }
 }
+Object.assign(env, process.env);
 const siteUrl = process.argv[2] || env.VITE_SITE_URL;
 if (!siteUrl) throw new Error('Provide the public React domain: npm run sitemap -- https://your-domain.example');
 const base = new URL(siteUrl);
-if (base.protocol !== 'https:' || base.pathname !== '/' || base.search || base.hash) throw new Error('Use an HTTPS origin without a path.');
+if (base.protocol !== 'https:' || base.pathname !== '/' || base.search || base.hash || base.username || base.password) throw new Error('Use an HTTPS origin without a path or credentials.');
 const domain = env.VITE_SHOPIFY_STORE_DOMAIN?.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 if (!domain || !env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN) throw new Error('Shopify public Storefront configuration is missing.');
 async function query(query, variables = {}) {
   const response = await fetch('https://' + domain + '/api/' + (env.VITE_SHOPIFY_API_VERSION || '2026-07') + '/graphql.json', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Shopify-Storefront-Access-Token': env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN }, body: JSON.stringify({ query, variables })
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Shopify-Storefront-Access-Token': env.VITE_SHOPIFY_STOREFRONT_ACCESS_TOKEN }, body: JSON.stringify({ query, variables }), signal: AbortSignal.timeout(20000)
   });
   const payload = await response.json();
   if (!response.ok || payload.errors?.length) throw new Error('Sitemap could not load Shopify content.');

@@ -5,11 +5,13 @@ import AccountDashboard from '../../components/AccountDashboard/AccountDashboard
 import { Link } from 'react-router-dom';
 import { getCustomerAccountConfigError, registerCustomer, recoverCustomer } from '../../services/shopify/accountService';
 import { useCustomerAccount } from '../../contexts/customerAccountContext';
+import { useNotifications } from '../../contexts/notificationContext';
 
 const inputClass = 'mt-2 w-full border border-gray-300 px-4 py-3 outline-none focus:border-gray-900';
 const buttonClass = 'min-h-12 bg-gray-900 px-8 py-3 text-sm font-medium text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50';
 
 export default function Account() {
+  const { notify } = useNotifications();
   const { site } = useSite();
   const { customer, isLoading, isSigningIn, isSigningOut, error, clearError, login, logout } = useCustomerAccount();
   const [mode, setMode] = useState('login');
@@ -39,11 +41,13 @@ export default function Account() {
       if (mode === 'register') {
         if (values.password !== values.confirmPassword) throw new Error('Passwords do not match.');
         await registerCustomer(values);
+        notify('Account created. Sign in with your email and password.');
         form.reset();
         setMode('login');
         setMessage('Account created. Sign in with your email and password. If Shopify sends an activation email, activate your account first.');
       } else if (mode === 'recover') {
         await recoverCustomer(values.email);
+        notify('Recovery request processed. Check your email for instructions if the account is eligible.', 'info');
         form.reset();
         setMessage('If this email is eligible for password recovery, Shopify will send instructions. Check your inbox and spam folder.');
       } else if (await login(values)) {
@@ -53,6 +57,7 @@ export default function Account() {
       }
     } catch (failure) {
       setFormError(failure.message || 'Please try again.');
+      notify(failure.message || 'Please try again.', 'error');
       if (form.elements.password) form.elements.password.value = '';
       if (form.elements.confirmPassword) form.elements.confirmPassword.value = '';
     } finally {
